@@ -44,7 +44,7 @@ export const NPC_ASSETS = {
   "drinking-friend":"assets/npcs/drinking-friend.png",
   "love-advisor":"assets/npcs/love-advisor.png",
   "male-rival":"assets/npcs/male-rival-clean.png",
-  "player-ex":"assets/heroines/yuri/yuri-ex-girlfriend-2d.png"
+  "player-ex":"assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=2"
 };
 
 export const GIFT_VISUAL_ASSETS = Object.freeze({

@@ -460,7 +460,7 @@ function updateImmersiveCharacter(expressionId="calm") {
   if(immersiveScene?.id===LOCKED_DAY2_SCENE_ID&&immersiveScene.activeCharacterAssetUrl){character.src=immersiveScene.activeCharacterAssetUrl;character.hidden=false;character.dataset.expression=expressionId;applyCharacterStage(character,{},"haeun");$("#vnAccessoryLayer").hidden=true;syncOutfitCharacterMedia(true);return;}
   updateGiftVehicleLayer(characterId);
   const npcSprite=characterId!=="girlfriend"?getNpcSprite(characterId):"";
-  const yuriEventVideo=characterId==="player-ex"&&["event","temptation"].includes(immersiveScene?.type)?"assets/heroines/yuri/yuri-ex-girlfriend-2d_transparent.webm?v=1":"";
+  const yuriEventVideo=characterId==="player-ex"&&["event","temptation"].includes(immersiveScene?.type)?"assets/heroines/yuri/yuri-ex-girlfriend-2d-01.webm?v=1":"";
   if(npcSprite){character.src=npcSprite;character.dataset.expression=expressionId;$("#vnAccessoryLayer").hidden=true;syncOutfitCharacterMedia(!yuriEventVideo,yuriEventVideo);return;}
   if(characterId==="girlfriend"&&immersiveScene?.previewOutfitImage){character.src=immersiveScene.previewOutfitImage;character.dataset.expression=expressionId;$("#vnAccessoryLayer").hidden=true;syncOutfitCharacterMedia(true);return;}
   state.currentExpression=expressionId;
@@ -1398,7 +1398,12 @@ function renderGameTools() {
     const equipped=getEquippedHeroineOutfit(state),outfits=HEROINE_OUTFITS.filter(item=>item.heroineId===state.partner.heroineId);
     content.innerHTML=`<div class="game-tools-intro"><b>${escapeHtml(state.partner.name)} 전체 의상</b><span>잠금·보유 조건과 관계없이 미리 보고 바로 선택할 수 있습니다.</span></div><div class="tools-outfit-grid">${outfits.map((outfit,index)=>`<button type="button" data-tools-outfit="${outfit.id}" class="tools-outfit-card ${equipped?.id===outfit.id?"selected":""}"><img src="${outfitImageUrl(outfit)}" alt="${escapeHtml(outfit.name)}" loading="lazy"><span>${outfit.eventOnly?"이벤트 의상":String(index+1).padStart(2,"0")}</span><b>${escapeHtml(outfit.name.replace(`${state.partner.name} · `,""))}</b><small>${outfit.eventOnly?"근사한 데이트 10회 보상":money(outfit.price)} · ${equipped?.id===outfit.id?"현재 착용 중":"이 의상 선택"}</small></button>`).join("")}</div>`;
   }else if(gameToolsTab==="yuri"){
-    content.innerHTML=`<div class="game-tools-intro"><b>전여자친구 · 유리</b><span>특별 이벤트에서 등장하는 유리를 미리 확인하고 가운데 패널 이벤트를 실행할 수 있습니다.</span></div><article class="tools-yuri-card"><div class="tools-yuri-media"><img src="assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=2" alt="전여자친구 유리"><video src="assets/heroines/yuri/yuri-ex-girlfriend-2d_transparent.webm?v=1" autoplay loop muted playsinline aria-label="전여자친구 유리 특별 이벤트 영상"></video></div><div class="tools-yuri-copy"><span>SPECIAL EVENT CHARACTER</span><h3>전여자친구 유리</h3><p>고서 복원가 · 차분하고 쉽게 속내를 읽을 수 없는 옛 연인</p>${yuriEvent?`<button type="button" data-tools-yuri-event="${yuriEvent.id}">가운데 패널에서 특별 이벤트 실행</button>`:`<small>연결된 특별 이벤트가 없습니다.</small>`}</div></article>`;
+    const yuriVideos=[
+      {id:"01",label:"대화씬",description:"유리 대화·유혹 이벤트의 가운데 패널 영상",source:"assets/heroines/yuri/yuri-ex-girlfriend-2d-01.webm?v=1",eventId:yuriEvent?.id},
+      {id:"02",label:"특별 영상",description:"유리 특별 이벤트 영상 02",source:"assets/heroines/yuri/yuri-ex-girlfriend-2d-02.webm?v=1"},
+      {id:"03",label:"특별 영상",description:"유리 특별 이벤트 영상 03",source:"assets/heroines/yuri/yuri-ex-girlfriend-2d-03.webm?v=1"}
+    ];
+    content.innerHTML=`<div class="game-tools-intro"><b>전여자친구 · 유리</b><span>유리 영상 01~03을 각각 확인할 수 있습니다. 대화 장면에는 01번 영상이 사용됩니다.</span></div><div class="tools-yuri-video-list">${yuriVideos.map(item=>`<article class="tools-yuri-video-card"><div class="tools-yuri-media"><video src="${item.source}" autoplay loop muted playsinline preload="metadata" aria-label="전여자친구 유리 ${item.id} ${item.label}"></video><span>${item.id}</span></div><div class="tools-yuri-copy"><span>YURI VIDEO ${item.id}</span><h3>유리 ${item.id} · ${item.label}</h3><p>${item.description}</p>${item.eventId?`<button type="button" data-tools-yuri-event="${item.eventId}">01 대화씬 가운데 패널에서 실행</button>`:""}</div></article>`).join("")}</div>`;
   }else if(gameToolsTab==="events"){
     const groups=SITUATION_EVENTS.reduce((result,event)=>{(result[event.categoryLabel]??=[]).push(event);return result;},{});
     const invitation=getPendingLateNightInvitation(state),invitationStatus=invitation?"메시지 도착":state.nightState?.lateNightInvitation?.status==="completed"?"완료":state.day>=LATE_NIGHT_INVITATION_MIN_DAY?"발생 가능":"DAY 6 잠금";

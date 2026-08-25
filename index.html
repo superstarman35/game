@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css">
-  <link rel="stylesheet" href="styles.css?v=80">
+  <link rel="stylesheet" href="styles.css?v=81">
   <link rel="preload" as="image" href="assets/accessories/lavender-ribbon-star-pin.png">
   <link rel="preload" as="image" href="assets/characters/girlfriend-date-outfit-calm-2d.png">
   <link rel="preload" as="image" href="assets/characters/girlfriend-phone-calm-2d.png">
@@ -69,10 +69,16 @@
           </div>
         </div>
       </div>
-      <div class="intro-art" aria-hidden="true">
+      <div class="intro-art">
+        <button id="titleIntroductionButton" class="intro-guide-button" type="button" aria-haspopup="dialog">
+          <span><i class="fa-regular fa-compass" aria-hidden="true"></i></span>
+          <b>소개글</b>
+          <small>게임과 캐릭터 알아보기</small>
+          <em aria-hidden="true">→</em>
+        </button>
         <div class="character-stage-intro">
           <div class="intro-scene-glow"></div>
-          <img class="intro-standing" src="assets/characters/girlfriend-standing-smile-2d.png?v=2" alt="">
+          <img class="intro-standing" src="assets/characters/girlfriend-standing-smile-2d.png?v=2" alt="여자친구 하은">
         </div>
       </div>
     </section>
@@ -251,6 +257,6 @@
     </article>
   </section>
   <div id="toast" class="toast"></div>
-  <script type="module" src="game.js?v=107"></script>
+  <script type="module" src="game.js?v=108"></script>
 </body>
 </html>

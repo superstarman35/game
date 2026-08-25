@@ -122,6 +122,7 @@ function closeModal() {
   modal.classList.remove("today-record-active");
   modal.classList.remove("relationship-directory-active");
   modal.classList.remove("item-detail-active");
+  modal.classList.remove("intro-guide-active");
   if (modalReturnFocus?.isConnected) modalReturnFocus.focus();
   modalReturnFocus = null;
   if (state && !state.ended && !state.breakup) { if(state.phase===3){if(state.world?.mode==="district")renderWorldMap();else renderNightHome();}else sound.playScene(phases[state.phase].key,state.day); }
@@ -1683,6 +1684,58 @@ function loadGame() { const loaded = SaveManager.load(); if (!loaded) { toast("�
 function saveGame() { if (!state) return; SaveManager.save(state); toast(`DAY ${state.day} 진행 상황을 저장했어요.`); }
 function openContinuePreview(){const loaded=SaveManager.load();if(!loaded){toast("이어할 저장 데이터가 없어요.");return;}const story=loaded.scenario?.enabled===true,mode=getGameModeConfig(loaded.gameMode),updated=loaded.updatedAt?new Intl.DateTimeFormat("ko-KR",{dateStyle:"medium",timeStyle:"short"}).format(new Date(loaded.updatedAt)):"저장 시각 없음";$("#modalContent").innerHTML=`<section class="continue-preview"><span>${story?"STORY MODE":"FREE MODE"}</span><h2>${story?"《결혼까지 30일!》":"나만의 30일"}</h2><div><strong>DAY ${loaded.day}</strong>${story?`<b>D-${Math.max(0,31-loaded.day)}</b>`:""}</div><p>${escapeHtml(mode.description)}</p><small>마지막 플레이 · ${escapeHtml(updated)}</small><button id="continueResumeButton" class="primary-button" type="button">이어하기 →</button></section>`;openModal();$("#continueResumeButton").addEventListener("click",()=>{closeModal();loadGame();});}
 
+function openTitleIntroduction(){
+  $("#modalContent").innerHTML=`<article class="title-introduction">
+    <header class="title-introduction-hero">
+      <span>WELCOME TO THIRTY DAYS</span>
+      <h2>오늘부터 시작되는<br><em>우리의 30일</em></h2>
+      <p>연애와 일, 돈과 인간관계 사이에서 하루의 선택을 쌓아 가는 로맨스 라이프 시뮬레이션입니다.</p>
+      <nav aria-label="소개글 목차"><a href="#guide-girlfriend">여자친구</a><a href="#guide-player">남자 주인공</a><a href="#guide-howto">플레이 방법</a><a href="#guide-mode">게임 모드</a></nav>
+    </header>
+    <div class="title-introduction-body">
+      <section id="guide-girlfriend" class="guide-section">
+        <div class="guide-heading"><span>01</span><div><small>GIRLFRIEND</small><h3>여자친구 캐릭터</h3></div></div>
+        <p class="guide-lead">여자친구는 성격과 생활 패턴이 서로 다릅니다. 선택한 MBTI와 직업은 연락 방식, 데이트 반응, 바쁜 시간과 관계 변화에 영향을 줍니다.</p>
+        <div class="guide-card-grid guide-card-grid-three">
+          <article><i class="fa-regular fa-heart" aria-hidden="true"></i><b>성격과 관계 성향</b><p>연락 중요도, 질투, 독립성, 낭만성처럼 각자 다른 기준으로 플레이어의 행동을 받아들입니다.</p></article>
+          <article><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><b>16가지 MBTI</b><p>ISTJ부터 ENTJ까지 무작위로 결정되며, 같은 선택이라도 성향에 따라 호감과 대화 반응이 달라집니다.</p></article>
+          <article><i class="fa-solid fa-briefcase" aria-hidden="true"></i><b>다양한 직업군</b><p>재무기획자, 간호사, 승무원, 마케터, 파티시에, 트레이너, 대학생, 프리랜서 등 각자의 일정이 생깁니다.</p></article>
+        </div>
+        <div class="guide-character-note"><strong>현재 만날 수 있는 인물 · 하은</strong><span>차분하고 현실적인 안정형 직장인. 약속과 신뢰를 중요하게 여기며, 관계가 불안할수록 감정보다 해결 방법을 먼저 찾습니다.</span></div>
+      </section>
+      <section id="guide-player" class="guide-section">
+        <div class="guide-heading"><span>02</span><div><small>PLAYER</small><h3>남자 주인공</h3></div></div>
+        <div class="guide-card-grid guide-player-grid">
+          <article><mark>STANDARD</mark><b>기본 캐릭터</b><p>외모와 능력치가 고르게 배치된 균형형. 처음 플레이하거나 안정적으로 성장하고 싶을 때 적합합니다.</p></article>
+          <article><mark>PREMIUM</mark><b>잘생긴 캐릭터</b><p>매력, 패션, 자신감이 높은 외모 특화형. 첫인상과 관계 형성에서 유리하게 출발합니다.</p></article>
+          <article><mark>PREMIUM</mark><b>부자 캐릭터</b><p>높은 초기 자금과 업무·사교 능력을 가진 자산 특화형. 쇼핑과 투자 선택의 폭이 넓습니다.</p></article>
+        </div>
+        <div class="guide-job-strip"><b>남자 주인공 직업군</b><p>프리랜서 · 공무원 · 작가 · N잡 알바생 · 일용직 · 디자이너 · 프로그래머 · 대학생 · 건물주 아들 · 미술작가 · 가수 지망생 · 배우 · 재수생 · 중고차 딜러 · 프로 운동선수</p><small>직업마다 초기 자금, 능력치, 급여, 스트레스와 전용 행동이 달라집니다.</small></div>
+      </section>
+      <section id="guide-howto" class="guide-section">
+        <div class="guide-heading"><span>03</span><div><small>HOW TO PLAY</small><h3>플레이 방법</h3></div></div>
+        <ol class="guide-step-list">
+          <li><span>1</span><div><b>모드와 캐릭터 설정</b><p>게임 모드, 여자친구 성향과 직업, 내 외모·이름·직업을 선택합니다.</p></div></li>
+          <li><span>2</span><div><b>하루의 행동 선택</b><p>아침부터 밤까지 연락, 데이트, 업무, 휴식과 자기관리 중 지금 필요한 행동을 고릅니다.</p></div></li>
+          <li><span>3</span><div><b>관계와 생활 관리</b><p>호감도와 신뢰도뿐 아니라 체력, 피로, 스트레스, 자산과 커리어도 함께 관리합니다.</p></div></li>
+          <li><span>4</span><div><b>선택의 결과 확인</b><p>대화와 사건에서 내린 결정이 다음 장면, 인맥, 관계의 위기와 30일 뒤 결말을 바꿉니다.</p></div></li>
+        </ol>
+      </section>
+      <section id="guide-mode" class="guide-section">
+        <div class="guide-heading"><span>04</span><div><small>GAME MODE</small><h3>어떤 30일을 시작할까요?</h3></div></div>
+        <div class="guide-mode-grid">
+          <article class="story"><small>STORY MODE</small><h4>《결혼까지 30일!》</h4><p>기억을 잃은 주인공과 30일 뒤 결혼을 약속했다는 여자친구의 비밀을 따라가는 로맨스 미스터리입니다.</p><ul><li>주인공 외형과 일부 프로필 고정</li><li>순서가 있는 메인 스토리와 단서</li><li>선택에 따른 이야기와 결말 변화</li></ul></article>
+          <article class="free"><small>FREE MODE</small><h4>《나만의 30일》</h4><p>직업, 사랑, 돈, 쇼핑과 인맥을 자유롭게 관리하며 원하는 삶과 관계를 만들어 가는 모드입니다.</p><ul><li>주인공 외형과 직업 자유 설정</li><li>지도, 투자, 커리어와 생활 콘텐츠</li><li>조건과 확률에 따라 다양한 사건 발생</li></ul></article>
+        </div>
+      </section>
+    </div>
+    <footer><p>완벽한 선택보다 나다운 선택을 해보세요.</p><button id="introductionStartButton" class="primary-button" type="button">게임 시작하기 <span>→</span></button></footer>
+  </article>`;
+  $("#modal").classList.add("intro-guide-active");
+  openModal();
+  $("#introductionStartButton").addEventListener("click",()=>{closeModal();startGame();});
+}
+
 if (!SaveManager.hasSave()) $("#loadButton").classList.add("hidden");
 renderSoundButton();
 $("#soundButton").addEventListener("click",()=>{const enabled=sound.toggle();renderSoundButton();if(enabled){sound.play("success");if(state)sound.playScene(phases[state.phase].key,state.day);else sound.playBgm("title",new Date().getDate());}toast(enabled?"효과음과 BGM을 켰어요.":"모든 소리를 껐어요.");});
@@ -1722,7 +1775,7 @@ $("#autoButton").addEventListener("click",toggleAutoMode);
 $("#skipButton").addEventListener("click",skipImmersiveScene);
 $("#fullscreenButton").addEventListener("click",toggleFullscreen);
 $("#storyFullscreenButton").addEventListener("click",toggleFullscreen);
-$("#startButton").addEventListener("click",startGame); $("#titleContinueButton")?.addEventListener("click",openContinuePreview); $("#titleSettingsButton")?.addEventListener("click",()=>{$("#modalContent").innerHTML=`<span class="eyebrow">SETTINGS</span><h2>환경설정</h2><p>타이틀 화면에서는 사운드 설정을 변경할 수 있습니다.</p><button id="titleSoundToggle" class="primary-button" type="button">${sound.enabled?"사운드 끄기":"사운드 켜기"}</button>`;openModal();$("#titleSoundToggle").addEventListener("click",()=>{$("#soundButton").click();closeModal();});}); $("#nextButton").addEventListener("click",applyAction); $("#chatButton").addEventListener("click",openChat); $("#saveButton").addEventListener("click",saveGame); $("#loadButton").addEventListener("click",loadGame); $("#closeModal").addEventListener("click",closeModal); $("#actionResultConfirm").addEventListener("click",confirmActionResult); $("#resetButton").addEventListener("click",()=>{ if(confirm("새 게임을 시작할까요? 현재 진행은 사라집니다.")) { SaveManager.clear(); location.reload(); } });
+$("#startButton").addEventListener("click",startGame); $("#titleIntroductionButton")?.addEventListener("click",openTitleIntroduction); $("#titleContinueButton")?.addEventListener("click",openContinuePreview); $("#titleSettingsButton")?.addEventListener("click",()=>{$("#modalContent").innerHTML=`<span class="eyebrow">SETTINGS</span><h2>환경설정</h2><p>타이틀 화면에서는 사운드 설정을 변경할 수 있습니다.</p><button id="titleSoundToggle" class="primary-button" type="button">${sound.enabled?"사운드 끄기":"사운드 켜기"}</button>`;openModal();$("#titleSoundToggle").addEventListener("click",()=>{$("#soundButton").click();closeModal();});}); $("#nextButton").addEventListener("click",applyAction); $("#chatButton").addEventListener("click",openChat); $("#saveButton").addEventListener("click",saveGame); $("#loadButton").addEventListener("click",loadGame); $("#closeModal").addEventListener("click",closeModal); $("#actionResultConfirm").addEventListener("click",confirmActionResult); $("#resetButton").addEventListener("click",()=>{ if(confirm("새 게임을 시작할까요? 현재 진행은 사라집니다.")) { SaveManager.clear(); location.reload(); } });
 $("#introVideo").addEventListener("ended",playNextIntroVideo);
 $("#skipIntroButton").addEventListener("click",()=>{$("#introVideo").pause();introVideoIndex=INTRO_VIDEO_PLAYLIST.length-1;unlockIntroStart("프롤로그 영상을 건너뛰었습니다. 게임을 시작할 수 있습니다.");});
 $("#introGameStartButton").addEventListener("click",finishOnboarding);

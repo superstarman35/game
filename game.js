@@ -670,7 +670,7 @@ function renderModeSetup() {
     onboarding.mode=button.dataset.gameMode;
     const config=getGameModeConfig(onboarding.mode);
     if(config.fixedPartnerId){onboarding.partner=createGirlfriendFromProfile(config.fixedPartnerId);onboarding.partner.age=23;onboarding.girlfriendTraitsReady=true;onboarding.girlfriendJobReady=true;onboarding.playerArchetype="balanced";renderPlayerSetup();}
-    else{onboarding.partner=null;onboarding.girlfriendTraitsReady=false;onboarding.girlfriendJobReady=false;renderGirlfriendSetup();}
+    else{onboarding.partner=createGirlfriendFromProfile("haeun");onboarding.girlfriendTraitsReady=false;onboarding.girlfriendJobReady=false;renderGirlfriendSetup();}
   }));
 }
 
@@ -680,12 +680,12 @@ function renderGirlfriendSetup() {
   const candidates = ["haeun","nari","yuri"].map(id=>HEROINE_PROFILES.find(profile=>profile.id===id)).filter(Boolean);
   $("#onboardingContent").innerHTML = `
     <header class="setup-heading"><span>GIRLFRIEND SELECT</span><h1>여자친구 캐릭터 선택</h1><p>보라색 머리 캐릭터를 선택한 뒤 MBTI와 직업을 확인하세요. 이름은 그대로 유지됩니다.</p></header>
-    <div class="setup-card-grid heroine-select-grid">${candidates.map((profile,index)=>{const image=profile.id==="yuri"?"assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=2":`${profile.referenceImage}?v=7`;return `<button class="setup-character-card ${onboarding.partner?.heroineId===profile.id?"selected":""}" data-heroine="${profile.id}" type="button" ${index?"disabled":""}><img src="${image}" alt="${escapeHtml(profile.name)}"><strong>${escapeHtml(profile.name)}</strong><span>${index?"준비 중 · 선택 불가":"선택 가능"}</span></button>`;}).join("")}</div>
+    <div class="setup-card-grid heroine-select-grid">${candidates.map((profile,index)=>{const image=profile.id==="haeun"?"assets/characters/girlfriend-standing-smile-2d.png?v=3":profile.id==="yuri"?"assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=3":`${profile.referenceImage}?v=7`;return `<button class="setup-character-card heroine-card-${profile.id} ${onboarding.partner?.heroineId===profile.id?"selected":""}" data-heroine="${profile.id}" type="button" ${index?"disabled":""}><img src="${image}" alt="${escapeHtml(profile.name)} 상반신"><strong>${escapeHtml(profile.name)}</strong><span>${index?"준비 중 · 선택 불가":"선택 가능"}</span></button>`;}).join("")}</div>
     <div class="roll-panel ${onboarding.partner?"":"locked"}">
       <div class="roll-row"><div><small>MBTI</small><b id="girlfriendTraitRoll">${onboarding.girlfriendTraitsReady?escapeHtml(onboarding.partner.mbti):"버튼을 눌러 MBTI 선택"}</b></div><button id="rollGirlfriendTraits" type="button" ${onboarding.partner?"":"disabled"}>MBTI 랜덤 선택</button></div>
       <div class="roll-row"><div><small>CAREER</small><b id="girlfriendJobRoll">${onboarding.girlfriendJobReady?escapeHtml(onboarding.partner.career.name):"여자친구의 직업"}</b></div><button id="rollGirlfriendJob" type="button" ${onboarding.partner?"":"disabled"}>직업 랜덤 선택</button></div>
     </div>
-    <button id="girlfriendSetupNext" class="primary-button setup-next" type="button" ${onboarding.girlfriendTraitsReady&&onboarding.girlfriendJobReady?"":"disabled"}>나의 캐릭터 선택으로</button>`;
+    <button id="girlfriendSetupNext" class="primary-button setup-next setup-action-button" type="button" ${onboarding.girlfriendTraitsReady&&onboarding.girlfriendJobReady?"":"disabled"}>나의 캐릭터 선택으로 <span aria-hidden="true">→</span></button>`;
   document.querySelectorAll("[data-heroine]").forEach((button)=>button.addEventListener("click",()=>{
     onboarding.partner=createGirlfriendFromProfile(button.dataset.heroine);
     onboarding.girlfriendTraitsReady=onboarding.girlfriendJobReady=false;
@@ -714,12 +714,13 @@ function renderPlayerSetup() {
   document.body.classList.remove("mode-select-stage");
   onboarding.step=3; setOnboardingProgress(3);
   const storyMode=getGameModeConfig(onboarding.mode).kind==="story";
+  onboarding.playerArchetype ??= "balanced";
   if(storyMode)onboarding.playerArchetype="balanced";
   $("#onboardingContent").innerHTML=`
     <header class="setup-heading"><span>PLAYER SETUP</span><h1>${storyMode?"이름과 직업 설정":"나의 외모 선택"}</h1><p>${storyMode?"STORY MODE의 주인공 외형은 고정됩니다. 이름과 직업만 선택해 주세요.":"외형과 이름, 직업은 게임의 능력치와 대사에 그대로 적용됩니다."}</p></header>
     <div class="setup-card-grid player-select-grid ${storyMode?"story-player-locked":""}">${PLAYER_ARCHETYPES.map((entry)=>{const fixed=storyMode&&entry.id==="balanced",locked=storyMode&&!fixed;return `<button class="setup-character-card ${onboarding.playerArchetype===entry.id?"selected":""} ${locked?"story-locked":""}" data-player="${entry.id}" type="button" ${storyMode?'disabled aria-disabled="true"':""}><img src="${entry.image}" alt="${entry.name}"><strong>${entry.name}${entry.premium?" · PREMIUM":""}</strong><span>${fixed?"STORY MODE 고정":locked?"🔒 STORY MODE 잠금":`능력 ${entry.abilityRating} · 외모 ${entry.appearanceRating}`}</span><small>${locked?"FREE MODE에서 선택할 수 있습니다.":entry.description}</small></button>`;}).join("")}</div>
     <div class="player-input-panel"><label for="playerNameInput">남자친구 이름 <small>최대 3글자 · 한글 또는 영문</small></label><div class="player-name-roll"><input id="playerNameInput" value="${escapeHtml(onboarding.playerName)}" placeholder="이름을 직접 입력하세요" autocomplete="off" spellcheck="false" inputmode="text" aria-describedby="playerNameNotice"><button id="rollPlayerName" type="button">내 이름 랜덤 선택</button></div><small id="playerNameNotice" class="player-name-notice" aria-live="polite"></small><div class="roll-row"><div><small>MY CAREER</small><b id="playerJobRoll">${onboarding.playerJob?escapeHtml(onboarding.playerJob.name):"버튼을 눌러 직업 선택"}</b></div><button id="rollPlayerJob" type="button">내 직업 랜덤 선택</button></div></div>
-    <button id="playerSetupNext" class="primary-button setup-next" type="button" ${onboarding.playerArchetype&&onboarding.playerName&&onboarding.playerJob?"":"disabled"}>최종 결과 확인</button>`;
+    <button id="playerSetupNext" class="primary-button setup-next setup-action-button" type="button" ${onboarding.playerArchetype&&onboarding.playerName&&onboarding.playerJob?"":"disabled"}>최종 결과 확인 <span aria-hidden="true">→</span></button>`;
   if(!storyMode)document.querySelectorAll("[data-player]").forEach((button)=>button.addEventListener("click",()=>{const archetype=PLAYER_ARCHETYPES.find((entry)=>entry.id===button.dataset.player);if(archetype.premium)showPremiumConfirmation(archetype);else selectPlayerArchetype(archetype.id);}));
   const nameInput=$("#playerNameInput");
   let composingName=false;
@@ -1733,6 +1734,7 @@ function openTitleIntroduction(){
   </article>`;
   $("#modal").classList.add("intro-guide-active");
   openModal();
+  $("#closeModal").onclick=closeModal;
   $("#introductionStartButton").addEventListener("click",()=>{closeModal();startGame();});
 }
 

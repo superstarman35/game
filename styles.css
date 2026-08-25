@@ -978,3 +978,20 @@ body:has(#onboardingScreen:not(.hidden)) .top-actions{display:none}
 @media(max-width:1050px){.intro-guide-button{top:auto;bottom:16%;left:0}.title-introduction-hero,.title-introduction-body{padding-inline:38px}.title-introduction>footer{padding-inline:38px}}
 @media(max-width:820px){.intro-guide-button{top:10px;right:0;bottom:auto;left:0;margin:auto}.intro-art{padding-top:72px}.guide-card-grid-three,.guide-player-grid{grid-template-columns:1fr}.guide-step-list{grid-template-columns:1fr}}
 @media(max-width:600px){.modal.intro-guide-active{padding:0}.intro-guide-active .modal-card{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.title-introduction-hero{padding:55px 22px 30px}.title-introduction-body{padding:0 22px}.guide-section{padding:32px 0}.guide-mode-grid{grid-template-columns:1fr}.guide-mode-grid p{min-height:0}.title-introduction>footer{align-items:stretch;flex-direction:column;padding:25px 22px 32px}.title-introduction>footer .primary-button{width:100%}}
+
+/* Introduction readability and reliable close target */
+.intro-guide-active .modal-close{position:fixed;z-index:1001;top:calc(3dvh + 18px);right:max(calc((100vw - 1080px)/2 + 18px),calc(2vw + 18px));float:none;margin:0;pointer-events:auto;cursor:pointer}
+.title-introduction-hero>span{font-size:12px}.title-introduction-hero h2{font-size:clamp(36px,5vw,60px)}.title-introduction-hero>p{font-size:17px}.title-introduction-hero nav a{font-size:13px}.guide-heading>span{font-size:14px}.guide-heading small{font-size:11px}.guide-heading h3{font-size:27px}.guide-lead{font-size:16px}.guide-card-grid article b{font-size:16px}.guide-card-grid article p{font-size:13px}.guide-character-note strong{font-size:15px}.guide-character-note span{font-size:13px}.guide-player-grid article mark{font-size:11px}.guide-job-strip b{font-size:16px}.guide-job-strip p{font-size:13px}.guide-job-strip small{font-size:12px}.guide-step-list li>span{font-size:13px}.guide-step-list b{font-size:15px}.guide-step-list p{font-size:13px}.guide-mode-grid small{font-size:11px}.guide-mode-grid h4{font-size:22px}.guide-mode-grid p{font-size:13px}.guide-mode-grid li{font-size:12px}.title-introduction>footer p{font-size:14px}.title-introduction>footer .primary-button{font-size:16px}
+@media(max-width:600px){.intro-guide-active .modal-close{top:14px;right:14px}}
+
+/* Girlfriend setup portrait crop and highlighted next step */
+.heroine-select-grid .setup-character-card img{object-fit:cover;object-position:50% 13%;background:linear-gradient(145deg,#f9f1f4,#f3edf7)}
+.heroine-select-grid .heroine-card-haeun img{object-position:50% 12%;transform:scale(1.04);transform-origin:50% 16%}
+.heroine-select-grid .heroine-card-yuri img{object-position:50% 9%;transform:scale(1.08);transform-origin:50% 12%}
+.setup-action-button{border:0!important;background:linear-gradient(100deg,#f15f86,#e34f7a)!important;color:#fff!important;font-size:15px!important;font-weight:800!important;letter-spacing:-.02em;box-shadow:0 14px 30px #df527447!important;transition:transform .2s,box-shadow .2s,filter .2s}
+.setup-action-button:not(:disabled){animation:setup-action-ready 2.2s ease-in-out infinite}
+.setup-action-button:not(:disabled):hover,.setup-action-button:not(:disabled):focus-visible{filter:brightness(1.04);box-shadow:0 17px 36px #df527466!important;outline:0;transform:translateY(-3px)}
+.setup-action-button span{display:inline-block;margin-left:11px;font:700 19px Outfit;transition:transform .2s}.setup-action-button:hover span,.setup-action-button:focus-visible span{transform:translateX(4px)}
+.setup-action-button:disabled{background:#ebd9df!important;color:#ad98a1!important;box-shadow:none!important}
+@keyframes setup-action-ready{0%,100%{box-shadow:0 12px 28px #df52743d}50%{box-shadow:0 17px 39px #df527463;transform:translateY(-2px)}}
+@media(prefers-reduced-motion:reduce){.setup-action-button:not(:disabled){animation:none}}

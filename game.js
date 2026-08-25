@@ -1685,7 +1685,7 @@ $("#debugButton").addEventListener("click",openDebug);
 $("#tipToolsButton").addEventListener("click",()=>openGameTools());
 $("#gameToolsClose").addEventListener("click",closeGameTools);
 $("#gameToolsBackdrop").addEventListener("click",closeGameTools);
-$(".mini-tip").addEventListener("click",()=>openGameTools());
+$(".mini-tip")?.addEventListener("click",()=>openGameTools());
 $("#inventoryButton").addEventListener("click",openInventory);
 $("#shopButton").addEventListener("click",openShop);
 $("#financeButton").addEventListener("click",openFinance);

@@ -111,7 +111,8 @@ function buildEvent([id,title,category,startDay,endDay,hook,pressure,reveal,echo
 const BASE_SITUATION_EVENTS=BLUEPRINTS.map(buildEvent);
 BASE_SITUATION_EVENTS.push(
   buildEvent(["friend-advice-partner-work-stress","요즘 많이 힘들어 보인다는 친구의 말","friends",3,30,"카페에 있던 지훈이 조심스럽게 여자친구의 안부를 물었다.","최근 여자친구가 지쳐 보였지만 대신 단정해서 말하고 싶지는 않다고 했다.","지훈은 추측하지 말고 직접 괜찮은지 물어보라고 조언했다.","친구의 말은 여자친구와 솔직하게 이야기할 계기가 되었다."],100),
-  buildEvent(["friend-advice-partner-contact-drop","연락이 줄어든 이유를 확인하라는 조언","friends",4,30,"지훈이 요즘 두 사람의 연락이 줄어든 것 같다고 말했다.","바쁜 것인지 마음이 힘든 것인지 밖에서 판단할 수는 없었다.","지훈은 여자친구에게 먼저 시간을 내어 물어보라고 했다.","조언을 들은 뒤 미뤄 두었던 대화를 시작하기로 했다."],101)
+  buildEvent(["friend-advice-partner-contact-drop","연락이 줄어든 이유를 확인하라는 조언","friends",4,30,"지훈이 요즘 두 사람의 연락이 줄어든 것 같다고 말했다.","바쁜 것인지 마음이 힘든 것인지 밖에서 판단할 수는 없었다.","지훈은 여자친구에게 먼저 시간을 내어 물어보라고 했다.","조언을 들은 뒤 미뤄 두었던 대화를 시작하기로 했다."],101),
+  buildEvent(["minho-reports-minjun-date-invitation","민호가 전한 민준의 데이트 신청","friends",5,30,"퇴근 직전, 친한 남자 동료 민호가 할 말이 있다며 조용히 불러 세웠다.","민호는 며칠 전 민준이 여자친구에게 주말에 단둘이 만나자고 제안하는 모습을 봤다고 말했다.","단순한 친분보다는 데이트 신청에 가까운 분위기였지만, 민호는 단정하지 말고 여자친구에게 먼저 확인하라고 조언했다.","민호의 말을 들은 뒤 민준보다 여자친구의 대답을 먼저 들을지 고민하게 됐다."],102)
 );
 const PLAYER_EX_EVENT_IDS=new Set(["situation-ex-girlfriend-reunion"]);
 for(const event of BASE_SITUATION_EVENTS){
@@ -153,9 +154,12 @@ const LOCATION_RULES={
   "situation-friend-advice-partner-work-stress":{categories:["cafe"]},
   "situation-friend-advice-partner-contact-drop":{categories:["cafe"]}
 };
+export const GENERAL_EVENT_PROBABILITY_MULTIPLIER=2;
+export const GENERAL_EVENT_PROBABILITY_CAP=.07;
 const LOW_TRUST_IDS=new Set(["situation-phone-notification-seen","situation-girlfriend-with-stranger","situation-caught-with-coworker","situation-travel-big-fight","situation-late-night-reconciliation"]);
 const FRIEND_ADVICE_IDS=new Set(["situation-friend-advice-partner-work-stress","situation-friend-advice-partner-contact-drop"]);
 const FRIEND_RELATED_IDS=new Set(["situation-meet-her-friends","situation-friends-evaluate-partner","situation-parents-first-story"]);
+const MINHO_DATE_WARNING_ID="situation-minho-reports-minjun-date-invitation";
 const EXCLUDED_FREE_ROMANCE_IDS=new Set(["situation-shared-umbrella"]);
 
 const FREE_ROMANCE_DIALOGUES={
@@ -328,6 +332,11 @@ const FREE_ROMANCE_DIALOGUES={
     q1:"요즘 둘이 연락이 줄었지? 그냥 바쁜 건지 서로 확인은 해 봤어?",a1:"아직 제대로 묻지 못했어. 괜히 부담 줄까 봐 기다렸는데 오히려 더 멀어진 것 같아.",
     reveal:"밖에서 이유를 맞히려 하지 말고, 짧게라도 대화할 시간을 먼저 잡아 봐.",q2:"오늘 바로 연락한다면 어떻게 말할래?",a2:"답을 재촉하지 않고 이번 주에 십 분이라도 통화할 수 있는 시간을 물어볼게.",prompt:"줄어든 연락에 관한 지훈의 조언을 어떻게 실행할까?",
     choices:[["연락 빈도를 탓하지 않고 대화 가능한 시간을 묻는다","서운함을 비난으로 시작하지 않아 서로의 최근 생활을 설명할 차분한 시간을 만들었다."],["서로 편한 연락 횟수와 바쁜 날의 신호를 다시 정한다","감정에만 기대지 않고 현재 생활에 맞는 연락 기준을 새로 합의할 계기를 만들었다."]]
+  },
+  "situation-minho-reports-minjun-date-invitation":{
+    q1:"이걸 말해야 하나 고민했는데, 네가 모르는 것보다는 아는 게 나을 것 같아서.",a1:"무슨 일인데 그렇게 심각해? 들은 그대로 말해 줘.",
+    reveal:"며칠 전에 민준이가 네 여자친구에게 이번 주말에 단둘이 만나자고 했어. 내가 들은 분위기로는 데이트 신청에 가까웠어.",q2:"그래도 바로 민준이한테 따지지는 말고, 여자친구한테 먼저 확인해 보는 게 어때?",a2:"그래. 남의 말만 듣고 단정하지 않고 여자친구의 대답부터 직접 들을게.",prompt:"민준의 데이트 신청을 전해 들은 나는 어떻게 대응할까?",
+    choices:[["여자친구에게 사실을 차분하게 확인한다","민호의 충고대로 여자친구에게 먼저 사실을 물었다. 여자친구는 민준의 제안을 이미 거절했다며, 자신의 말을 먼저 들어 줘서 고맙다고 답했다."],["민준에게 먼저 연락해 선을 넘지 말라고 경고한다","여자친구의 대답을 듣기 전에 민준에게 경고했다. 여자친구는 자신이 직접 거절할 수 있었다며 믿어 주지 않은 점을 서운해했다."]]
   }
 };
 
@@ -338,13 +347,23 @@ function compactFreeRomanceEvent(event){
   event.trigger=route?"location-enter":event.triggerGroup;
   event.locationCategories=route?.categories??[];
   if(route?.probability!=null)event.probability=route.probability;
+  else event.probability=Math.min(event.probability*GENERAL_EVENT_PROBABILITY_MULTIPLIER,GENERAL_EVENT_PROBABILITY_CAP);
   if(LOW_TRUST_IDS.has(event.id)&&!event.conditions.some(condition=>condition.stat==="trust"))event.conditions.push({stat:"trust",operator:"<=",value:200});
   if(event.category==="temptation"){event.npcRequirements=["female-coworker"];event.minimumNpcInterest=45;}
   if(FRIEND_ADVICE_IDS.has(event.id)){event.npcRequirements=["best-friend"];event.conditions.push({stat:"relationshipStress",operator:">=",value:45});}
+  if(event.id===MINHO_DATE_WARNING_ID){
+    event.npcId="office-best-male";event.npcName="민호";event.eventType="COWORKER";event.timeOfDay="evening";
+    event.npcRequirements=["office-best-male","male-rival","female-coworker"];
+    event.npcInterestRequirements=[{npcId:"female-coworker",stat:"interestInPlayer",operator:">=",value:95}];
+    event.relatedNpcIds=["office-best-male","male-rival","female-coworker"];
+    event.conditionLabel="유진의 나에 대한 호감(관심) 95 이상";
+    event.relationshipStates=["DISTANT","HONEYMOON","STABLE","PASSIONATE","SUSPICIOUS","CONFLICT","BREAKUP_RISK"];
+  }
   const dialogue=FREE_ROMANCE_DIALOGUES[event.id];
   if(!dialogue)throw new Error(`자유모드 대화 데이터 누락: ${event.id}`);
   const source=event.scenes[0],speaker=event.npcName??(event.npcId==="player-ex"?"유리":event.category==="work"?"직장 동료":event.category==="friends"?"지훈":"연인");
   if(route?.categories?.includes("cafe"))source.backgroundId="cafe-rain-evening";
+  if(event.id===MINHO_DATE_WARNING_ID){source.backgroundId="office-day";source.timeOfDay="evening";}
   source.title=event.title;source.transition="none";source.characterIds=[event.npcId];source.pose="standing";source.itemIds=[];
   source.dialogueTurns=[
     {type:"narration",speaker:"내레이션",text:event.hook},
@@ -365,6 +384,10 @@ function compactFreeRomanceEvent(event){
   if(event.id==="situation-ex-girlfriend-reunion")event.choices=[
     {...event.choices[0],effects:{trust:8,relationshipStress:-3},npcEffects:{"player-ex":{affection:0}}},
     {...event.choices[1],effects:{trust:-8,excitement:10,relationshipStress:5},npcEffects:{"player-ex":{affection:15}}}
+  ];
+  if(event.id===MINHO_DATE_WARNING_ID)event.choices=[
+    {...event.choices[0],id:"ask-partner",effects:{trust:8,affection:3,relationshipStress:-2},npcEffects:{"office-best-male":{trust:3,affection:2}},flag:`${event.id}:ASK_PARTNER`},
+    {...event.choices[1],id:"warn-minjun",effects:{confidence:3,conflict:6,trust:-3,relationshipStress:5},npcEffects:{"office-best-male":{trust:-1}},flag:`${event.id}:WARN_MINJUN`}
   ];
   event.maxTriggerCount=1;event.repeatable=false;
   return event;

@@ -1,6 +1,6 @@
 import { validateGirlfriend } from "./girlfriend-manager.mjs?v=7";
 import { generateJob, getJobStartingState, validateJob } from "./jobs-data.mjs?v=6";
-import { generateNpcs, validateNpcs } from "./npc-manager.mjs";
+import { generateNpcs, validateNpcs } from "./npc-manager.mjs?v=2";
 import { validateMemories } from "./memory-manager.mjs";
 import { createInvestmentState, validateInvestmentState } from "./investment-manager.mjs?v=2";
 import { createLotteryState, validateLotteryState } from "./lottery-manager.mjs";
@@ -13,6 +13,8 @@ import { createStoryDirectorState, validateStoryDirectorState } from "./dynamic-
 import { applyPlayerArchetype, createPlayerProfile, validatePlayerProfile } from "./player-profile-data.mjs";
 import { createWorldState, validateWorldState } from "./world-map-manager.mjs";
 import { createScenarioState, normalizeGameMode, validateScenarioState } from "./scenario-state.mjs";
+import { createYujinSecretRouteState, validateYujinSecretRouteState } from "./yujin-secret-route.mjs";
+import { createWorldEncounterRoutes, validateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=3";
 
 export const MAX_DAY = 30;
 export const PHASE_COUNT = 4;
@@ -59,6 +61,8 @@ export function createInitialState(partner, random = Math.random, setup = {}) {
     girlfriendEquipment: {},
     npcs: generateNpcs(random),
     npcHistory: [],
+    worldEncounterHistory: [],
+    worldEncounterRoutes: createWorldEncounterRoutes(),
     temptationHistory: [],
     rivalHistory: [],
     breakup: null,
@@ -66,6 +70,7 @@ export function createInitialState(partner, random = Math.random, setup = {}) {
     initiatedMessages: [],
     conversationHistory: [],
     conversationSafety: {hostileCount:0,lastHostileDay:null},
+    yujinSecretRoute: createYujinSecretRouteState(),
     storyHistory: [],
     storyFlags: {},
     futureScore: 0,
@@ -153,6 +158,8 @@ export function validateState(value) {
   if (!Array.isArray(value.logs) || !Array.isArray(value.choices) || !value.situationEventStates || !value.futureEventWeights || !Array.isArray(value.microEventHistory) || !value.eventRuntime || !value.settings) return false;
   if (!Array.isArray(value.storyHistory) || !value.storyFlags || typeof value.storyFlags !== "object" || !Number.isFinite(value.futureScore) || (value.pendingStoryId !== null && typeof value.pendingStoryId !== "string") || !Array.isArray(value.cgCollection) || !Array.isArray(value.videoCollection)) return false;
   if (!validateHiddenRouteState(value.hiddenRoute)) return false;
+  if (!validateYujinSecretRouteState(value.yujinSecretRoute)) return false;
+  if (!Array.isArray(value.worldEncounterHistory) || !validateWorldEncounterRoutes(value.worldEncounterRoutes)) return false;
   if (!validateStoryDirectorState(value.storyDirector)) return false;
   if (!value.dayStartSnapshot || typeof value.dayStartSnapshot !== "object" || (value.nightState !== null && typeof value.nightState !== "object")) return false;
   return ["affection", "trust", "excitement", "attachment", "conflict", "relationshipStress", "money", "health", "energy", "stress", "fatigue", "charm", "fashion", "confidence", "work", "social"].every(key => Number.isFinite(value[key]));

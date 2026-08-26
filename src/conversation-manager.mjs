@@ -1,5 +1,6 @@
 import { getMemoryContext } from "./memory-manager.mjs";
 import { getItem } from "./items-data.mjs";
+import { getHaeunMessageReply } from "./haeun-message-data.mjs?v=1";
 
 export function buildConversationContext(state) {
   const recentActions = (state.actionHistory ?? []).slice(-6).map(entry => ({ day:entry.day, actionId:entry.actionId, tag:entry.tag }));
@@ -89,13 +90,14 @@ export function getContextualOpening(context) {
 export function generateContextualReply(context, message) {
   const text = String(message ?? "").trim();
   if (!text) return null;
-  const contextual=sessionAwareReply(context,text);if(contextual)return contextual;
   const latestMemory = context.importantMemories?.at(0);
   const previousTurn = context.recentConversation?.at(-1);
   if (previousTurn && /기억|아까|전에|방금/.test(text)) {
     const previousMessage = previousTurn.user.replace(/\s+/g, " ").slice(0, 42);
     return { text:`응, 기억해. 아까 네가 “${previousMessage}”라고 말해 줬잖아.`, effects:{ affection:3, trust:5 } };
   }
+  if(context.girlfriend.heroineId==="haeun")return getHaeunMessageReply(context,text);
+  const contextual=sessionAwareReply(context,text);if(contextual)return contextual;
   const voice=context.girlfriend.heroineId==="nari"?{listen:"응, 나도 네 이야기 더 듣고 싶어. 그리고 내 얘기도 해도 돼?",love:"나도 좋아해! 그렇게 말해 주니까 오늘 하루가 환해지는 것 같아."}:context.girlfriend.heroineId==="sejin"?{listen:"그래, 계속 말해 봐. 네 생각을 솔직하게 듣고 싶어.",love:"그 말은 가볍게 듣지 않을게. 나도 네가 많이 소중해."}:{listen:"응, 계속 말해 줘. 오늘 네 이야기를 더 듣고 싶어.",love:"나도 많이 좋아해. 오늘은 그 말이 더 듣고 싶었어."};
   if (/미안|사과/.test(text)) return { text:context.relationship.trust < 450 ? "말해 줘서 고마워. 행동으로도 보여 줬으면 좋겠어." : "괜찮아. 솔직하게 말해 줘서 고마워.", effects:{ affection:4, trust:8 } };
   if (/사랑|좋아해/.test(text)) return { text:context.relationship.affection >= 650 ? voice.love : "고마워. 우리 천천히 더 가까워지자.", effects:{ affection:9, trust:3 } };

@@ -3,7 +3,7 @@ import { recordMemory } from "./memory-manager.mjs";
 
 const randomInt = (random, min, max) => min + Math.floor(random() * (max - min + 1));
 const ACTIVE_QUOTAS = { office:5, friend:3, rival:2, life:4 };
-const CORE_IDS = new Set(["female-coworker","team-lead","best-friend","male-rival","player-ex"]);
+const CORE_IDS = new Set(["female-coworker","team-lead","office-best-male","best-friend","male-rival","player-ex"]);
 
 function selectActiveIds(random) {
   const selected=new Set(CORE_IDS);
@@ -53,7 +53,7 @@ export function migrateNpcRoster(npcs, random = Math.random) {
       storyTags:[...character.storyTags],
       links:[...character.links],
       instanceId:previous.instanceId || character.instanceId,
-      active:character.id==="player-ex" ? true : typeof previous.active === "boolean" ? previous.active : true,
+      active:["player-ex","office-best-male"].includes(character.id) ? true : typeof previous.active === "boolean" ? previous.active : true,
       storyState:previous.storyState ?? "available"
     };
   });
@@ -80,10 +80,17 @@ export function applyNpcActionEffects(state, action) {
 
 export function getNpcRelationshipStatus(character) {
   if (character.active === false) return {label:"이번 회차 미등장",tone:"neutral"};
+  if (isYujinSecretGirlfriend(character)) return {label:"비밀여자친구",tone:"secret"};
   if (["coworker","admirer","ex"].includes(character.relationshipType) && character.interestInPlayer >= 75) return {label:"비밀 만남 직전",tone:"danger"};
   if (["coworker","admirer","ex"].includes(character.relationshipType) && character.interestInPlayer >= 55) return {label:"개인적인 관심",tone:"interest"};
   if (["rival","admirer","ex"].includes(character.relationshipType) && character.interestInGirlfriend >= 75) return {label:"적극적인 접근",tone:"danger"};
   if (["rival","admirer","ex"].includes(character.relationshipType) && character.interestInGirlfriend >= 55) return {label:"경계할 관계",tone:"warning"};
   if (character.trust >= 60) return {label:"믿을 수 있는 사이",tone:"safe"};
   return {label:"아직 어색한 사이",tone:"neutral"};
+}
+
+export function isYujinSecretGirlfriend(character) {
+  if (!character || character.id !== "female-coworker" || character.active === false) return false;
+  const relationshipIndex=Math.round((Number(character.affection??0)+Number(character.trust??0))/2);
+  return relationshipIndex>=100 && Number(character.affection)>=100 && Number(character.trust)>=100 && Number(character.interestInPlayer)>=100;
 }

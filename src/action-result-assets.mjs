@@ -8,6 +8,7 @@ export const ACTION_RESULT_ASSETS = Object.freeze({
   "evening-go-home": "assets/action-results/generated/idle-rest-01.png",
   "night-idle": "assets/action-results/generated/idle-rest-01.png",
   "focused-work": "assets/action-results/focus-work.png",
+  "overtime": "assets/action-results/generated/overtime-01.png",
   "lunch-date": "assets/action-results/lunch-girlfriend.png",
   "dinner-date": "assets/action-results/dinner-date.png",
   "gift-shopping": "assets/action-results/generated/gift-shopping-01.png",

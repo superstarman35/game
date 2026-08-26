@@ -1,14 +1,14 @@
-import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=11";
-import { SaveManager } from "./src/save-manager.mjs?v=15";
+import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=13";
+import { SaveManager } from "./src/save-manager.mjs?v=17";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
-import { getEventDiagnostics, getRuntimeEventDefinitions, rollRuntimeEvent } from "./src/event-manager.mjs?v=9";
-import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=7";
+import { getEventDiagnostics, getRuntimeEventDefinitions, rollRuntimeEvent } from "./src/event-manager.mjs?v=10";
+import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=9";
 import { resolveSituationEventChoice, rollLocationSituationEvent } from "./src/situation-event-manager.mjs?v=6";
 import { EventRuntimeManager } from "./src/event-runtime-manager.mjs?v=4";
 import { getMicroEventDiagnostics, rollMicroEvents } from "./src/micro-event-manager.mjs?v=5";
 import { auditEventSystems } from "./src/event-audit.mjs?v=4";
 import { EVENT_DEFINITIONS } from "./src/events-data.mjs?v=5";
-import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=13";
+import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=16";
 import { getActionAvailability, getWeekdayName, isActionVisible, isWeekend } from "./src/action-manager.mjs?v=5";
 import { calculateActionEffects } from "./src/consequence-manager.mjs?v=2";
 import { getRelationshipState } from "./src/relationship-manager.mjs";
@@ -17,12 +17,13 @@ import { appendTransaction, BOND_PURCHASE_AMOUNT, BOND_RETURN_RATE, BOND_TERM_DA
 import { acquireActionItem, addItem, equipGirlfriendOutfit, equipItem, getEffectiveAppearance, getEquipmentBonuses, getPurchaseQuote, purchaseItem } from "./src/inventory-manager.mjs?v=8";
 import { getItem, ITEMS } from "./src/items-data.mjs?v=7";
 import { giveGift } from "./src/gift-manager.mjs?v=7";
-import { applyNpcActionEffects, getNpcRelationshipStatus } from "./src/npc-manager.mjs";
-import { getTemptationOpportunity, resolveTemptation, TEMPTATION_CHOICES } from "./src/temptation-manager.mjs";
+import { applyNpcActionEffects, getNpcRelationshipStatus, isYujinSecretGirlfriend } from "./src/npc-manager.mjs";
+import { getTemptationOpportunity, resolveTemptation, TEMPTATION_CHOICES } from "./src/temptation-manager.mjs?v=2";
 import { applyRivalPressure, calculateRivalRisk } from "./src/rival-manager.mjs";
 import { calculateBreakupRisk, evaluateBreakup } from "./src/conflict-manager.mjs";
-import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=9";
-import { requestGirlfriendReply } from "./src/ai-chat-client.mjs";
+import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=10";
+import { requestGirlfriendReply } from "./src/ai-chat-client.mjs?v=2";
+import { HAEUN_MESSAGE_CORPUS } from "./src/haeun-message-data.mjs?v=1";
 import { advanceStockMarket, buyStock, getPortfolioSummary, sellStock } from "./src/investment-manager.mjs?v=2";
 import { buyInstantLottery, DAILY_TICKET_LIMIT, getLotterySummary, LOTTERY_TICKET_PRICE } from "./src/lottery-manager.mjs?v=3";
 import { analyzePlayHistory } from "./src/ending-manager.mjs";
@@ -51,11 +52,13 @@ import { getGirlfriendVisual } from "./src/girlfriend-visual-data.mjs";
 import { createPlayerProfile, PLAYER_ARCHETYPES, sanitizePlayerNameInput } from "./src/player-profile-data.mjs?v=2";
 import { getRandomPlayerName } from "./src/player-names-data.mjs?v=1";
 import { GAME_MODES, getGameModeConfig } from "./src/scenario-state.mjs?v=2";
-import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=11";
+import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=12";
 import { getActionResultVideo } from "./src/action-result-videos.mjs?v=2";
 import { discoverLocation, getNearbyLocation, getPlayerHomeProfile, getRoadCells, isWorldLocationOpen, moveWorldPlayer, selectWorldTransport, TRANSPORT_OPTIONS, travelToCity, WORLD_ATLAS, WORLD_MAPS } from "./src/world-map-manager.mjs?v=3";
 import { getMapLocationAsset } from "./src/map-location-assets.mjs";
-import { getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, WORLD_REPEAT_ENCOUNTER_CHANCE } from "./src/world-encounter-manager.mjs?v=2";
+import { JAEMIN_ENCOUNTER_CHANCE, JUNHO_ENCOUNTER_CHANCE, MINJUN_ENCOUNTER_CHANCE, getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, WORLD_REPEAT_ENCOUNTER_CHANCE } from "./src/world-encounter-manager.mjs?v=3";
+import { formatEventProbability, getEventProbabilitySummary } from "./src/event-display.mjs?v=1";
+import { appendYujinConversationTurn, completeYujinRooftopMeeting, getPendingYujinRooftopInvitation, getYujinMessageSuggestions, isYujinRooftopInvitationReady, migrateYujinSecretRouteState, YUJIN_MESSAGE_CORPUS, YUJIN_NPC_ID, YUJIN_ROOFTOP_EVENT_IMAGE, YUJIN_ROOFTOP_INVITATION, YUJIN_ROOFTOP_LOCATION_ID, YUJIN_ROOFTOP_START_MINUTES } from "./src/yujin-secret-route.mjs?v=1";
 
 const $ = (selector) => document.querySelector(selector);
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[character]));
@@ -168,6 +171,7 @@ function closeModal() {
   modal.classList.remove("transport-modal-active");
   modal.classList.remove("today-record-active");
   modal.classList.remove("relationship-directory-active");
+  modal.classList.remove("yujin-message-active");
   modal.classList.remove("item-detail-active");
   modal.classList.remove("intro-guide-active");
   if (modalReturnFocus?.isConnected) modalReturnFocus.focus();
@@ -641,7 +645,7 @@ function chooseImmersiveOption(choiceId) {
   eventRuntime.input.unlock(immersiveScene.id);eventRuntime.transition("PLAYING");persistEventRuntime(true);
   const temptationNpc=immersiveScene.type==="temptation"?state.npcs.find(npc=>immersiveScene.id===`temptation-${npc.instanceId}`):null;
   const secretChoice=TEMPTATION_CHOICES.secret;
-  const resultPopup=choiceResult?.resultPopup??(temptationNpc&&choiceId==="secret"?{action:{id:"temptation-secret",title:`${temptationNpc.name}와 비밀 만남`},message:`${temptationNpc.name}와 둘만의 술자리를 선택했다. 설렘은 커졌지만 ${state.partner.name}와의 신뢰에는 위험한 균열이 생겼다.`,effects:{npcInterest:secretChoice.npcInterest,npcTrust:secretChoice.npcTrust,trust:secretChoice.partnerTrust,conflict:secretChoice.conflict}}:null);
+  const resultPopup=choiceResult?.resultPopup??(temptationNpc&&choiceId==="secret"?{action:{id:"temptation-secret",title:`${temptationNpc.name}와 비밀 만남`},message:`${temptationNpc.name}와 둘만의 술자리를 선택했다. 설렘은 커졌지만 ${state.partner.name}와의 신뢰에는 위험한 균열이 생겼다.`,effects:{npcInterest:secretChoice.npcInterest,npcTrust:secretChoice.npcTrust,trust:secretChoice.partnerTrust,affection:secretChoice.partnerAffection,conflict:secretChoice.conflict}}:null);
   if(resultPopup){openActionResultModal(resultPopup.action,resultPopup.message,resultPopup.effects,renderImmersiveStep);return;}
   renderImmersiveStep();
 }
@@ -1210,8 +1214,21 @@ function showWorldEventResult({map,image,title,response,effects={},effectLabels=
 function openRepeatWorldEncounter(map,location,encounter){
   const image=getWorldEventImage(map,null,location),characterImage=getNpcSprite(encounter.npcId);
   $("#modal").classList.add("world-event-active");
-  $("#modalContent").innerHTML=`<article class="world-event-layer">${renderWorldEventMedia(image,encounter.title,characterImage,encounter.npcName)}<div class="world-event-copy"><span class="eyebrow">${escapeHtml(map.name)} · 50% ENCOUNTER</span><h2>${escapeHtml(encounter.title)}</h2><p>${escapeHtml(encounter.message)}</p><strong class="world-event-question">${escapeHtml(encounter.question)}</strong><div class="world-event-choices">${encounter.choices.map(choice=>`<button type="button" data-repeat-world-choice="${escapeHtml(choice.id)}">${escapeHtml(choice.label)}</button>`).join("")}</div></div></article>`;
-  document.querySelectorAll("[data-repeat-world-choice]").forEach(button=>button.addEventListener("click",()=>{const result=resolveRepeatWorldEncounter(state,encounter,button.dataset.repeatWorldChoice);if(!result)return;recordMemory(state,{type:"npc",summary:`${location.name}에서 ${result.npc.name}와 만남 · ${result.choice.label}`,importance:3,tags:["지도","반복 조우",location.id,result.npc.id]});state.logs.push({time:`DAY ${state.day} · ENCOUNTER`,text:`${location.name}에서 ${result.npc.name}와 만났다. · 호감도 +${result.effects.affection??0}`});SaveManager.save(state);showWorldEventResult({map,image,title:encounter.title,response:result.choice.response,effects:{npcAffection:result.effects.affection??0,npcTrust:result.effects.trust??0,npcInterest:result.effects.interestInPlayer??0},effectLabels:{npcAffection:`${result.npc.name} 호감도`,npcTrust:`${result.npc.name} 신뢰도`,npcInterest:`${result.npc.name}의 관심`},characterImage,characterName:result.npc.name});}));
+  $("#modalContent").innerHTML=`<article class="world-event-layer">${renderWorldEventMedia(image,encounter.title,characterImage,encounter.npcName)}<div class="world-event-copy"><span class="eyebrow">${escapeHtml(map.name)} · ${escapeHtml(formatEventProbability(encounter.chance??WORLD_REPEAT_ENCOUNTER_CHANCE))} ENCOUNTER</span><h2>${escapeHtml(encounter.title)}</h2><p>${escapeHtml(encounter.message)}</p><strong class="world-event-question">${escapeHtml(encounter.question)}</strong><div class="world-event-choices">${encounter.choices.map(choice=>`<button type="button" data-repeat-world-choice="${escapeHtml(choice.id)}">${escapeHtml(choice.label)}</button>`).join("")}</div></div></article>`;
+  document.querySelectorAll("[data-repeat-world-choice]").forEach(button=>button.addEventListener("click",()=>{const result=resolveRepeatWorldEncounter(state,encounter,button.dataset.repeatWorldChoice);if(!result)return;recordMemory(state,{type:"npc",summary:`${location.name}에서 ${result.npc.name}와 만남 · ${result.choice.label}`,importance:encounter.final?5:3,tags:["지도","반복 조우",location.id,result.npc.id]});state.logs.push({time:`DAY ${state.day} · ENCOUNTER`,text:`${location.name}에서 ${result.npc.name}와 만났다. · 호감도 ${result.effects.affection>=0?'+':''}${result.effects.affection??0}`});SaveManager.save(state);showWorldEventResult({map,image,title:encounter.title,response:[result.choice.response,result.followUpMessage].filter(Boolean).join(" "),effects:{npcAffection:result.effects.affection??0,npcTrust:result.effects.trust??0,npcInterest:result.effects.interestInPlayer??0},effectLabels:{npcAffection:`${result.npc.name} 호감도`,npcTrust:`${result.npc.name} 신뢰도`,npcInterest:`${result.npc.name}의 관심`},characterImage,characterName:result.npc.name});}));
+}
+
+function openYujinRooftopMeeting(map,location) {
+  const image=YUJIN_ROOFTOP_EVENT_IMAGE,characterImage=getNpcSprite(YUJIN_NPC_ID),yujin=(state.npcs??[]).find(npc=>npc.id===YUJIN_NPC_ID);
+  $("#modal").classList.add("world-event-active");
+  $("#modalContent").innerHTML=`<article class="world-event-layer yujin-rooftop-event">${renderWorldEventMedia(image,"문라이트 루프탑의 비밀 약속",characterImage,yujin?.name??"유진")}<div class="world-event-copy"><span class="eyebrow">23:00 이후 · SECRET APPOINTMENT</span><h2>문라이트 루프탑의 유진</h2><p>도시의 불빛 너머로 유진이 혼자 기다리고 있었다. 테이블 위에는 아직 손대지 않은 두 잔이 놓여 있다.</p><strong class="world-event-question">“와줬네. 오늘은 회사 동료 말고, 네 비밀여자친구로 만나고 싶었어.”</strong><div class="world-event-choices"><button id="acceptYujinRooftopMeeting" type="button">유진에게 다가가 둘만의 만남을 시작한다</button></div><p class="yujin-rooftop-warning">이 선택은 현재 여자친구의 호감도와 신뢰도를 각각 100 낮춥니다.</p></div></article>`;
+  $("#acceptYujinRooftopMeeting").addEventListener("click",()=>{
+    const result=completeYujinRooftopMeeting(state);if(!result)return;
+    recordMemory(state,{type:"secret-rooftop",summary:"밤 11시 이후 문라이트 루프탑에서 유진과 비밀 만남을 가졌다.",importance:5,tags:["유진","비밀여자친구","홍대","문라이트 루프탑"]});
+    state.logs.push({time:`DAY ${state.day} · SECRET EVENT`,text:`문라이트 루프탑에서 유진을 만났다. 여자친구 호감도 ${result.effects.affection} · 신뢰도 ${result.effects.trust}`});
+    SaveManager.save(state);
+    showWorldEventResult({map,image,title:"문라이트 루프탑의 비밀 만남",response:"유진과 둘만의 밤을 보냈다. 돌아오는 길, 현재 여자친구와의 관계에는 되돌리기 어려운 균열이 남았다.",effects:result.effects,effectLabels:{affection:"여자친구 호감도",trust:"여자친구 신뢰도"},characterImage,characterName:yujin?.name??"유진"});
+  });
 }
 
 function openWorldEventLayer(map,location){
@@ -1224,6 +1241,7 @@ function openWorldEventLayer(map,location){
 }
 
 function hasLateNightSpecialEvent(location) {
+  if(location.id===YUJIN_ROOFTOP_LOCATION_ID&&getPendingYujinRooftopInvitation(state))return true;
   if(location.category==="girlfriend-home"&&getPendingLateNightInvitation(state))return true;
   if(location.category==="girlfriend-home"&&getHaeunHomeMapEvent())return true;
   const activeEvent=state.eventRuntime?.activeEvent;
@@ -1244,7 +1262,7 @@ function openWorldLocation(locationId) {
   if(!home&&!isWorldLocationOpen(location,ensureNightState(state).minutes,{hasSpecialEvent:hasLateNightSpecialEvent(location)})){openClosedVenuePopup(map,location);return;}
   $("#modalContent").innerHTML=`<span class="eyebrow">${escapeHtml(map.name)} · ARRIVAL</span><h2>${location.icon} ${escapeHtml(locationName)}</h2><p>${escapeHtml(location.description)}</p>${home?"":`<div class="venue-menu-preview"><small>이곳에서 할 수 있는 일</small><strong>${escapeHtml(getVenueMenu(location))}</strong></div>`}<p class="venue-visit-question">${escapeHtml(locationName)}에 방문하시겠습니까?</p><div class="venue-confirm-actions"><button id="visitLocationCancel" type="button">아니오</button><button id="visitLocationConfirm" class="primary-button" type="button">예${home?" · 귀가하기":" · 방문하기"}</button></div>`;openModal();
   $("#visitLocationCancel").addEventListener("click",closeModal);
-  $("#visitLocationConfirm").addEventListener("click",()=>{if(home){closeModal();returnToNightHome();return;}const result=spendNightTime(state,20,`${location.name} 방문`);if(!result.ok){showWorldTurnEndedPopup();return;}discoverLocation(state.world,location.id,state.day);state.logs.push({time:`DAY ${state.day} · MAP`,text:`${map.name}의 ${location.name}에 방문했다.`});if(location.category==="girlfriend-home"&&getPendingLateNightInvitation(state)){completeLateNightInvitationVisit(map,location);return;}const repeatEncounter=rollRepeatWorldEncounter(state,location,ensureNightState(state).minutes);if(repeatEncounter){SaveManager.save(state);openRepeatWorldEncounter(map,location,repeatEncounter);return;}const locationEventPool=ensureNightState(state).minutes>=22*60?SITUATION_EVENTS.filter(event=>event.npcId!=="girlfriend"):SITUATION_EVENTS;const locationEvent=rollLocationSituationEvent(state,location,Math.random,locationEventPool);SaveManager.save(state);if(locationEvent){closeModal();$(".play-panel").classList.remove("hidden");$("#nightHome").classList.add("hidden");$("#worldMap").classList.add("hidden");openEventScene(locationEvent);return;}openWorldEventLayer(map,location);});
+  $("#visitLocationConfirm").addEventListener("click",()=>{if(home){closeModal();returnToNightHome();return;}const result=spendNightTime(state,20,`${location.name} 방문`);if(!result.ok){showWorldTurnEndedPopup();return;}discoverLocation(state.world,location.id,state.day);state.logs.push({time:`DAY ${state.day} · MAP`,text:`${map.name}의 ${location.name}에 방문했다.`});if(location.category==="girlfriend-home"&&getPendingLateNightInvitation(state)){completeLateNightInvitationVisit(map,location);return;}if(isYujinRooftopInvitationReady(state,location.id,ensureNightState(state).minutes)){SaveManager.save(state);openYujinRooftopMeeting(map,location);return;}const repeatEncounter=rollRepeatWorldEncounter(state,location,ensureNightState(state).minutes);if(repeatEncounter){SaveManager.save(state);openRepeatWorldEncounter(map,location,repeatEncounter);return;}const locationEventPool=ensureNightState(state).minutes>=22*60?SITUATION_EVENTS.filter(event=>event.npcId!=="girlfriend"):SITUATION_EVENTS;const locationEvent=rollLocationSituationEvent(state,location,Math.random,locationEventPool);SaveManager.save(state);if(locationEvent){closeModal();$(".play-panel").classList.remove("hidden");$("#nightHome").classList.add("hidden");$("#worldMap").classList.add("hidden");openEventScene(locationEvent);return;}openWorldEventLayer(map,location);});
 }
 
 function checkLateNightInvitation() {
@@ -1330,7 +1348,7 @@ function openAlbumVideoLayer(entry){if(!entry)return;closeAlbumVideoLayer();cons
 function openNightPc() {
   const workButton=isWeekend(state.day)?"":`<button data-pc-action="work">💼 야간 업무<small>수입 증가 · 스트레스 증가</small></button>`;
   $("#modalContent").innerHTML=`<span class="eyebrow">MY COMPUTER · 60 MIN</span><h2>컴퓨터로 무엇을 할까?</h2><div class="pc-actions"><button data-pc-action="game">🎮 게임하기<small>스트레스 완화 · 피로 증가</small></button><button data-pc-action="study">📚 자기계발<small>업무 능력 증가 · 피로 증가</small></button>${workButton}</div>`;openModal();
-  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-3,fatigue:5,energy:-3}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:1,stress:7,fatigue:5,energy:-5}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
+  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-3,fatigue:5,energy:-3}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:1,stress:7,fatigue:5,energy:-5,health:-5}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
 }
 
 function showNightPcResult(activity,result,startTime,changes) {
@@ -1463,9 +1481,10 @@ function openChat(mode="message") {
 }
 function renderConversationSession(){
   if(!activeConversation)return;const session=activeConversation,context=buildConversationContext(state),suggestions=getSuggestedConversationReplies(context,session.turn);
+  const conversationGuide=session.mode==='call'?'목소리를 들으며 천천히 이야기해 보세요.':state.partner.heroineId==='haeun'?`하은 전용 상황별 메시지 ${HAEUN_MESSAGE_CORPUS.length.toLocaleString('ko-KR')}개가 입력 내용에 맞춰 답합니다.`:'서로를 존중하는 말로 마음을 이어 가세요.';
   const waiting=session.replyPending?`<div class="message her reply-waiting" aria-label="${escapeHtml(state.partner.name)} 답장 작성 중"><i></i><i></i><i></i><small>${session.mode==='call'?'잠시 생각 중':'답장 작성 중'}</small></div>`:"";
   const messages=session.messages.map(item=>`<div class="message ${item.speaker}">${escapeHtml(item.text)}</div>`).join("")+waiting;
-  $("#modalContent").innerHTML=`<section class="conversation-session ${session.mode==='call'?'phone-conversation':''}"><span class="eyebrow">${session.mode==='call'?'PHONE CALL':'MESSAGES'} · ${escapeHtml(state.partner.name)}</span><div class="conversation-heading"><div class="conversation-avatar"><img src="${state.partner.referenceImage}" alt=""><i>${session.mode==='call'?'☎':'●'}</i></div><div><h2>${session.mode==='call'?`${state.partner.name}와 통화 중`:`${state.partner.name}에게 메시지`}</h2><p>${session.mode==='call'?'목소리를 들으며 천천히 이야기해 보세요.':'서로를 존중하는 말로 마음을 이어 가세요.'}</p></div></div><div id="chatMessages" class="chat-window" aria-live="polite">${messages}</div><div id="chatSafetyNotice" class="chat-safety-notice" hidden></div><div class="chat-suggestions">${suggestions.map(text=>`<button type="button" data-chat-suggestion="${escapeHtml(text)}" ${session.replyPending?'disabled':''}>${escapeHtml(text)}</button>`).join("")}</div><form id="chatForm" class="chat-compose"><input id="chatInput" maxlength="180" autocomplete="off" placeholder="${session.replyPending?'답장을 기다리고 있어요…':'직접 입력하거나 추천 답변을 선택하세요'}" required ${session.replyPending?'disabled':''}><button type="submit" ${session.replyPending?'disabled':''}>보내기</button></form><button id="finishConversation" class="conversation-finish" type="button" ${session.replyPending?'disabled':''}>${session.mode==='call'?'통화 종료':'대화 마치기'}</button></section>`;
+  $("#modalContent").innerHTML=`<section class="conversation-session ${session.mode==='call'?'phone-conversation':''}"><span class="eyebrow">${session.mode==='call'?'PHONE CALL':'MESSAGES'} · ${escapeHtml(state.partner.name)}</span><div class="conversation-heading"><div class="conversation-avatar"><img src="${state.partner.referenceImage}" alt=""><i>${session.mode==='call'?'☎':'●'}</i></div><div><h2>${session.mode==='call'?`${state.partner.name}와 통화 중`:`${state.partner.name}에게 메시지`}</h2><p>${escapeHtml(conversationGuide)}</p></div></div><div id="chatMessages" class="chat-window" aria-live="polite">${messages}</div><div id="chatSafetyNotice" class="chat-safety-notice" hidden></div><div class="chat-suggestions">${suggestions.map(text=>`<button type="button" data-chat-suggestion="${escapeHtml(text)}" ${session.replyPending?'disabled':''}>${escapeHtml(text)}</button>`).join("")}</div><form id="chatForm" class="chat-compose"><input id="chatInput" maxlength="180" autocomplete="off" placeholder="${session.replyPending?'답장을 기다리고 있어요…':'직접 입력하거나 추천 답변을 선택하세요'}" required ${session.replyPending?'disabled':''}><button type="submit" ${session.replyPending?'disabled':''}>보내기</button></form><button id="finishConversation" class="conversation-finish" type="button" ${session.replyPending?'disabled':''}>${session.mode==='call'?'통화 종료':'대화 마치기'}</button></section>`;
   $("#chatForm").addEventListener("submit",event=>{event.preventDefault();chatReply($("#chatInput").value);});
   document.querySelectorAll("[data-chat-suggestion]").forEach(button=>button.addEventListener("click",()=>chatReply(button.dataset.chatSuggestion)));
   $("#finishConversation").addEventListener("click",()=>finishConversation("대화를 마쳤습니다."));requestAnimationFrame(()=>{$("#chatMessages").scrollTop=$("#chatMessages").scrollHeight;});
@@ -1501,6 +1520,35 @@ function finishConversation(reason=""){
   $("#modalContent").innerHTML=`<span class="eyebrow">CONVERSATION RESULT</span><h2>${escapeHtml(summary)}</h2>${reason?`<p class="conversation-end-reason">${escapeHtml(reason)}</p>`:""}<div class="conversation-result-grid"><div><span>대화 횟수</span><b>${session.turn}턴</b></div><div><span>호감도</span><b class="${effect('affection')>=0?'up':'down'}">${effect('affection')>=0?'+':''}${effect('affection')}</b></div><div><span>신뢰도</span><b class="${effect('trust')>=0?'up':'down'}">${effect('trust')>=0?'+':''}${effect('trust')}</b></div><div><span>관계 스트레스</span><b class="${effect('relationshipStress')<=0?'up':'down'}">${effect('relationshipStress')>=0?'+':''}${effect('relationshipStress')}</b></div></div><p class="conversation-effect-limit">대화 한 번의 수치 변화는 항목별 최대 ±3입니다.</p><button id="conversationResultClose" class="primary-button conversation-result-close" type="button">확인</button>`;$("#conversationResultClose").addEventListener("click",closeModal);
 }
 
+function openYujinMessages(tab="chat") {
+  const yujin=(state.npcs??[]).find(npc=>npc.id===YUJIN_NPC_ID);
+  if(!isYujinSecretGirlfriend(yujin)){toast("유진과의 관계가 비밀여자친구 단계가 되어야 메시지를 보낼 수 있어요.");return;}
+  state.yujinSecretRoute=migrateYujinSecretRouteState(state.yujinSecretRoute);
+  const route=state.yujinSecretRoute;
+  if(!route.messageHistory.length)route.messageHistory.push({speaker:"her",text:"이제는 회사 메신저 말고 여기로 연락해. 우리 둘만 보는 대화니까.",day:state.day});
+  const invitation=getPendingYujinRooftopInvitation(state),sprite=getNpcSprite(YUJIN_NPC_ID);
+  const chatPanel=`<div id="yujinChatMessages" class="chat-window yujin-chat-window" aria-live="polite">${route.messageHistory.map(item=>`<div class="message ${item.speaker}">${escapeHtml(item.text)}</div>`).join("")}</div><div class="chat-suggestions">${getYujinMessageSuggestions(route).map(text=>`<button type="button" data-yujin-suggestion="${escapeHtml(text)}">${escapeHtml(text)}</button>`).join("")}</div><form id="yujinChatForm" class="chat-compose"><input id="yujinChatInput" maxlength="180" autocomplete="off" placeholder="유진에게 보낼 메시지를 입력하세요" required><button type="submit">보내기</button></form><p class="yujin-corpus-note">유진 전용 대화 ${YUJIN_MESSAGE_CORPUS.length}개 · 대화 내용과 질문에 맞춰 답장이 달라집니다.</p>`;
+  const appointmentPanel=invitation?`<article class="yujin-appointment-card ready"><span>SECRET APPOINTMENT</span><h3>오늘 밤 · 문라이트 루프탑</h3><p>“${escapeHtml(invitation.message)}”</p><dl><div><dt>장소</dt><dd>홍대거리 · 문라이트 루프탑</dd></div><div><dt>입장 시간</dt><dd>23:00 이후</dd></div><div><dt>상태</dt><dd>유진이 기다리는 중</dd></div></dl><button id="yujinOpenMap" class="primary-button" type="button">홍대거리 지도에서 확인</button></article>`:`<article class="yujin-appointment-card"><span>SECRET APPOINTMENT</span><h3>아직 정해진 약속이 없어요</h3><p>유진과 메시지를 이어 가면 둘만의 장소와 시간을 알려 줍니다.</p></article>`;
+  $("#modal").classList.remove("relationship-directory-active");$("#modal").classList.add("yujin-message-active");
+  $("#modalContent").innerHTML=`<section class="yujin-message-panel"><header><div class="conversation-heading"><div class="conversation-avatar"><img src="${escapeHtml(sprite)}" alt="유진"><i>●</i></div><div><span class="eyebrow">SECRET MESSAGE · 유진</span><h2>유진 전용 메시지</h2><p>비밀여자친구 · 둘만 볼 수 있는 대화 탭</p></div></div></header><nav class="yujin-message-tabs" aria-label="유진 메시지 탭"><button type="button" data-yujin-tab="chat" class="${tab==='chat'?'active':''}">대화</button><button type="button" data-yujin-tab="appointment" class="${tab==='appointment'?'active':''}">약속${invitation?'<em>1</em>':''}</button></nav><div class="yujin-message-body">${tab==='appointment'?appointmentPanel:chatPanel}</div><button id="closeYujinMessages" class="conversation-finish" type="button">인맥 관계로 돌아가기</button></section>`;
+  openModal();
+  document.querySelectorAll("[data-yujin-tab]").forEach(button=>button.addEventListener("click",()=>openYujinMessages(button.dataset.yujinTab)));
+  document.querySelectorAll("[data-yujin-suggestion]").forEach(button=>button.addEventListener("click",()=>sendYujinMessage(button.dataset.yujinSuggestion)));
+  $("#yujinChatForm")?.addEventListener("submit",event=>{event.preventDefault();sendYujinMessage($("#yujinChatInput").value);});
+  $("#yujinOpenMap")?.addEventListener("click",()=>{closeModal();const map=WORLD_MAPS.hongdae,location=map.locations.find(item=>item.id===YUJIN_ROOFTOP_LOCATION_ID);state.world.mode="district";state.world.cityId=map.cityId;state.world.districtId=map.id;state.world.x=map.start.x;state.world.y=map.start.y;state.world.transportConfirmed=true;if(location&&!state.world.discoveredLocations.includes(location.id))state.world.discoveredLocations.push(location.id);SaveManager.save(state);renderWorldMap();toast("홍대거리에서 문라이트 루프탑으로 이동해 주세요.");});
+  $("#closeYujinMessages").addEventListener("click",openPeople);
+  requestAnimationFrame(()=>{const chat=$("#yujinChatMessages");if(chat)chat.scrollTop=chat.scrollHeight;});
+}
+
+function sendYujinMessage(message) {
+  const text=String(message??"").trim();if(!text)return;
+  const result=appendYujinConversationTurn(state.yujinSecretRoute,text,{day:state.day,random:Math.random});
+  state.yujinSecretRoute=result.route;
+  state.logs.push({time:`DAY ${state.day} · SECRET MESSAGE`,text:`유진과 비밀 메시지 · ${text.slice(0,32)}`});
+  if(result.invitationCreated){recordMemory(state,{type:"secret-message",summary:"유진이 밤 11시 이후 문라이트 루프탑으로 오라고 했다.",importance:5,tags:["유진","비밀여자친구","문라이트 루프탑"]});toast("유진에게 문라이트 루프탑 약속이 도착했어요.");}
+  SaveManager.save(state);openYujinMessages(result.invitationCreated?"appointment":"chat");
+}
+
 function closeGameTools() {
   const layer=$("#gameToolsLayer"),backdrop=$("#gameToolsBackdrop"),trigger=$("#tipToolsButton");
   layer.classList.add("hidden");backdrop.classList.add("hidden");
@@ -1527,14 +1575,15 @@ function renderGameTools() {
   }else if(gameToolsTab==="events"){
     const groups=SITUATION_EVENTS.reduce((result,event)=>{(result[event.categoryLabel]??=[]).push(event);return result;},{});
     const invitation=getPendingLateNightInvitation(state),invitationStatus=invitation?"메시지 도착":state.nightState?.lateNightInvitation?.status==="completed"?"완료":state.day>=LATE_NIGHT_INVITATION_MIN_DAY?"발생 가능":"DAY 6 잠금";
-    content.innerHTML=`<div class="game-tools-intro"><b>전체 이벤트</b><span>일반 이벤트는 조건을 무시하고 실행할 수 있으며, 확률형 특수 이벤트는 발생 조건과 진행 방법을 확인할 수 있습니다.</span></div>${yuriEvent?`<section class="tools-event-group tools-featured-event"><h3>특별 이벤트 <span>2</span></h3><button type="button" class="tools-list-row" data-tools-yuri-event="${yuriEvent.id}"><span><b>전여자친구 유리</b><small>첫 재회 1회 · 이후 카페 모퉁이 방문마다 ${Math.round(WORLD_REPEAT_ENCOUNTER_CHANCE*100)}% 반복 조우</small></span><em>유리 호감 ${Math.round(yuriNpc?.affection??0)}</em></button><div class="tools-list-row"><span><b>직장 동료 유진 · 심야 포차거리</b><small>22:00 이후 심야 포차거리 방문 시 ${Math.round(WORLD_REPEAT_ENCOUNTER_CHANCE*100)}% 조우 · 선택에 따라 NPC 관계 상승</small></span><em>유진 호감 ${Math.round(yujinNpc?.affection??0)}</em></div></section>`:""}<section class="tools-event-group"><h3>심야 메시지 이벤트 <span>1</span></h3><button type="button" class="tools-list-row" data-tools-late-invitation><span><b>보고 싶어 · 늦은 밤의 초대</b><small>DAY ${LATE_NIGHT_INVITATION_MIN_DAY}+ · 22:00 이후 · 하루 1회 · ${Math.round(LATE_NIGHT_INVITATION_CHANCE*100)}% · ${escapeHtml(invitationStatus)}</small></span><em>상세</em></button></section>${Object.entries(groups).map(([label,events])=>`<section class="tools-event-group"><h3>${escapeHtml(label)} <span>${events.length}</span></h3>${events.map(event=>`<button type="button" class="tools-list-row" data-tools-event="${event.id}"><span><b>${escapeHtml(event.title)}</b><small>${escapeHtml(event.id)} · DAY ${event.dayRange?.[0]??"-"}–${event.dayRange?.[1]??"-"}</small></span><em>실행</em></button>`).join("")}</section>`).join("")}`;
+    content.innerHTML=`<div class="game-tools-intro"><b>전체 이벤트 · 발생 확률</b><span>자유모드 이벤트는 DAY 4부터 조건을 충족할 때 판정되며 하루에 최대 1개만 발생합니다. 아래 확률은 각 판정 기회당 기본 확률입니다.</span></div>${yuriEvent?`<section class="tools-event-group tools-featured-event"><h3>특별 이벤트 <span>2</span></h3><button type="button" class="tools-list-row" data-tools-yuri-event="${yuriEvent.id}"><span><b>전여자친구 유리</b><small>첫 재회 1회 · 카페 방문당 ${formatEventProbability(yuriEvent.probability)} · 이후 카페 모퉁이 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} 반복 조우</small></span><em>${formatEventProbability(yuriEvent.probability)}</em></button><div class="tools-list-row"><span><b>직장 동료 유진 · 심야 포차거리</b><small>22:00 이후 심야 포차거리 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} · 선택에 따라 NPC 관계 상승</small></span><em>${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)}</em></div></section>`:""}<section class="tools-event-group"><h3>심야 메시지 이벤트 <span>1</span></h3><button type="button" class="tools-list-row" data-tools-late-invitation><span><b>보고 싶어 · 늦은 밤의 초대</b><small>DAY ${LATE_NIGHT_INVITATION_MIN_DAY}+ · 22:00 이후 · 하루 1회 판정 · ${escapeHtml(invitationStatus)}</small></span><em>${formatEventProbability(LATE_NIGHT_INVITATION_CHANCE)}</em></button></section>${Object.entries(groups).map(([label,events])=>`<section class="tools-event-group"><h3>${escapeHtml(label)} <span>${events.length}</span></h3>${events.map(event=>`<button type="button" class="tools-list-row" data-tools-event="${event.id}" aria-label="${escapeHtml(event.title)} · ${getEventProbabilitySummary(event)}"><span><b>${escapeHtml(event.title)}</b><small>${event.conditionLabel?`조건: ${escapeHtml(event.conditionLabel)} · `:""}${getEventProbabilitySummary(event)} · DAY ${event.dayRange?.[0]??"-"}–${event.dayRange?.[1]??"-"} · ${event.repeatable===false?"1회 한정":"반복 가능"}</small></span><em>${formatEventProbability(event.probability)}</em></button>`).join("")}</section>`).join("")}`;
   }else if(gameToolsTab==="maps"){
     content.innerHTML=`<div class="game-tools-intro"><b>지도·장소 이벤트</b><span>19:00–21:59에는 여자친구와 함께 외출하고, 22:00 이후에는 혼자 외출합니다. 22:00 이후 일반 장소 이벤트에는 여자친구 캐릭터가 표시되지 않습니다.</span></div><div class="tools-map-list">${Object.values(WORLD_MAPS).map(map=>`<section class="tools-map-card"><header><span>${map.theme.toUpperCase()}</span><b>${escapeHtml(map.name)}</b><small>${escapeHtml(map.subtitle)}</small></header><div>${map.locations.map(location=>`<article><span>${location.icon}</span><div><b>${escapeHtml(location.name)}</b><small>${escapeHtml(location.category)} · ${escapeHtml(location.description)}${location.id==="small-cafe"?" · 유리 반복 조우 50%":location.id==="night-food"?" · 22시 이후 유진 조우 50%":""}</small></div><button type="button" data-tools-map-go="${map.id}:${location.id}">이동</button>${location.category!=="home"?`<button type="button" data-tools-map-event="${map.id}:${location.id}">이벤트</button>`:""}</article>`).join("")}</div></section>`).join("")}</div>`;
   }else{
     selectedToolsNpcId??=state.npcs?.[0]?.id??null;
-    const selected=(state.npcs??[]).find(npc=>npc.id===selectedToolsNpcId),selectedSprite=selected?getNpcSprite(selected.id):"",related=selected?SITUATION_EVENTS.filter(event=>event.npcId===selected.id||event.npcId===selected.role):[];
+    const selected=(state.npcs??[]).find(npc=>npc.id===selectedToolsNpcId),selectedSprite=selected?getNpcSprite(selected.id):"",related=selected?SITUATION_EVENTS.filter(event=>event.npcId===selected.id||event.npcId===selected.role||event.relatedNpcIds?.includes(selected.id)):[];
     content.innerHTML=`<div class="game-tools-intro"><b>NPC 데이터베이스</b><span>NPC를 선택하면 관계 상태와 연결된 이벤트를 확인할 수 있습니다.</span></div>${selected?`<article class="tools-npc-detail">${selectedSprite?`<img class="tools-npc-portrait" src="${selectedSprite}" alt="${escapeHtml(selected.name)}">`:""}<div class="tools-npc-copy"><span>${selected.active?"ACTIVE":"INACTIVE"}</span><h3>${escapeHtml(selected.name)} · ${escapeHtml(selected.role)}</h3><p>${escapeHtml(selected.job??selected.storyState??"")} · ${selected.age}세 · 호감 ${selected.affection} · 신뢰 ${selected.trust}</p><small>관계 ${escapeHtml(selected.relationshipType)} · 관심 ${selected.interestInPlayer} · 연인 관심 ${selected.interestInGirlfriend}</small>${related.length?`<div>${related.map(event=>`<button type="button" data-tools-event="${event.id}">${escapeHtml(event.title)} 실행</button>`).join("")}</div>`:""}</div></article>`:""}<div class="tools-npc-list">${(state.npcs??[]).map(npc=>`<button type="button" data-tools-npc="${npc.id}" class="${npc.id===selectedToolsNpcId?"selected":""}"><span>${npc.active?"●":"○"}</span><div><b>${escapeHtml(npc.name)}</b><small>${escapeHtml(npc.role)} · ${escapeHtml(npc.category)}</small></div><em>${getNpcRelationshipStatus(npc).label}</em></button>`).join("")}</div>`;
   }
+  if(gameToolsTab==="maps")document.querySelectorAll("[data-tools-map-go]").forEach(button=>{const [mapId,locationId]=button.dataset.toolsMapGo.split(":"),location=WORLD_MAPS[mapId]?.locations.find(item=>item.id===locationId),note=location?getWorldToolLocationNote(location):"";if(note){const copy=button.closest("article")?.querySelector("small");if(copy)copy.textContent+=note;}});
   document.querySelectorAll("[data-tools-tab]").forEach(button=>button.addEventListener("click",()=>{gameToolsTab=button.dataset.toolsTab;renderGameTools();}));
   document.querySelectorAll("[data-tools-outfit]").forEach(button=>button.addEventListener("click",()=>{const outfit=HEROINE_OUTFITS.find(item=>item.id===button.dataset.toolsOutfit);if(!outfit)return;let instance=(state.inventory??[]).find(item=>item.itemId===outfit.id&&item.owner==="girlfriend");instance??=addItem(state,outfit.id,"girlfriend","tip-tools");const result=equipGirlfriendOutfit(state,instance.instanceId);if(!result)return;SaveManager.save(state);render();renderGameTools();toast(`${outfit.name} 선택 완료`);}));
   document.querySelectorAll("[data-tools-event]").forEach(button=>button.addEventListener("click",()=>{const event=SITUATION_EVENTS.find(item=>item.id===button.dataset.toolsEvent);if(!event)return;closeGameTools();$(".play-panel").classList.remove("hidden");$("#nightHome").classList.add("hidden");$("#worldMap").classList.add("hidden");openEventScene(structuredClone(event),{debugPreview:true});}));
@@ -1678,6 +1727,7 @@ function openCareer() {
 }
 
 function openPeople() {
+  $("#modal").classList.remove("yujin-message-active");
   const breakupRisk = calculateBreakupRisk(state);
   const career=state.partner.career;
   const partnerCard=career?`<div class="npc-card partner-career-card"><div class="npc-details"><small>MY PARTNER · ${escapeHtml(career.workplace)}</small><b>${escapeHtml(state.partner.name)} · ${escapeHtml(career.name)}</b><span>${escapeHtml(career.workPattern)} · 월수입 ${money(career.incomeRange[0])}~${money(career.incomeRange[1])}</span><span><strong>${escapeHtml(career.perkName)}</strong> · ${escapeHtml(career.perkDescription)}</span><em>목표 · ${escapeHtml(career.careerGoal)}</em></div></div>`:"";
@@ -1694,7 +1744,8 @@ function openPeople() {
     const relationshipIndex=Math.round((Number(npc.affection??0)+Number(npc.trust??0))/2);
     const interest=npc.interestTarget==="girlfriend"?`여자친구 관심 ${npc.interestInGirlfriend}`:npc.interestTarget==="player"?`나에 대한 관심 ${npc.interestInPlayer}`:"특별한 관심 없음";
     const sprite=getNpcSprite(npc.id);
-    return `<article class="relationship-card${sprite?' illustrated':''}">${sprite?`<button class="relationship-portrait-button" type="button" data-relationship-portrait="${escapeHtml(sprite)}" data-relationship-name="${escapeHtml(npc.name)}" data-relationship-scene="${escapeHtml(groupId)}" aria-label="${escapeHtml(npc.name)} 일러스트 확대"><img src="${sprite}" alt="${escapeHtml(npc.name)}" loading="lazy"></button>`:''}<div class="relationship-card-copy"><small>${escapeHtml(npc.role)} · ${escapeHtml(npc.job)}</small><b>${escapeHtml(npc.name)}</b><span>관계 지수 <strong>${relationshipIndex}</strong> · 호감 ${npc.affection} · 신뢰 ${npc.trust}</span><i><em style="width:${Math.max(0,Math.min(100,relationshipIndex))}%"></em></i><span>${interest}</span></div><mark data-tone="${status.tone}">${escapeHtml(status.label)}</mark></article>`;
+    const canMessageYujin=isYujinSecretGirlfriend(npc);
+    return `<article class="relationship-card${sprite?' illustrated':''}">${sprite?`<button class="relationship-portrait-button" type="button" data-relationship-portrait="${escapeHtml(sprite)}" data-relationship-name="${escapeHtml(npc.name)}" data-relationship-scene="${escapeHtml(groupId)}" aria-label="${escapeHtml(npc.name)} 일러스트 확대"><img src="${sprite}" alt="${escapeHtml(npc.name)}" loading="lazy"></button>`:''}<div class="relationship-card-copy"><small>${escapeHtml(npc.role)} · ${escapeHtml(npc.job)}</small><b>${escapeHtml(npc.name)}</b><span>관계 지수 <strong>${relationshipIndex}</strong> · 호감 ${npc.affection} · 신뢰 ${npc.trust}</span><i><em style="width:${Math.max(0,Math.min(100,relationshipIndex))}%"></em></i><span>${interest}</span></div><div class="relationship-card-actions"><mark data-tone="${status.tone}">${escapeHtml(status.label)}</mark>${canMessageYujin?'<button type="button" data-yujin-message>메시지</button>':''}</div></article>`;
   };
   const groups=groupDefinitions.map(group=>{
     const members=activeNpcs.filter(npc=>!assigned.has(npc.id)&&group.matches(npc));
@@ -1706,6 +1757,7 @@ function openPeople() {
   $("#modalContent").innerHTML=`<article class="relationship-directory"><header><span class="eyebrow">RELATIONSHIP DIRECTORY</span><h2>인맥 관계</h2><p>관계 지수는 각 인물의 호감도와 신뢰도를 평균한 값입니다. 현재 연애 위기 ${breakupRisk.score} · ${breakupRisk.label}</p></header>${partnerCard}<div class="relationship-groups">${groups||"<p>아직 알게 된 인물이 없습니다.</p>"}</div><button id="relationshipDirectoryClose" class="primary-button" type="button">닫기</button></article>`;
   openModal();
   $("#relationshipDirectoryClose").addEventListener("click",closeModal);
+  $("[data-yujin-message]")?.addEventListener("click",()=>openYujinMessages("chat"));
   document.querySelectorAll("[data-relationship-portrait]").forEach(button=>button.addEventListener("click",()=>openRelationshipPortrait(button.dataset.relationshipPortrait,button.dataset.relationshipName,button.dataset.relationshipScene)));
 }
 
@@ -1854,6 +1906,13 @@ function openTitleIntroduction(){
   openModal();
   $("#closeModal").onclick=closeModal;
   $("#introductionStartButton").addEventListener("click",()=>{closeModal();startGame();});
+}
+
+function getWorldToolLocationNote(location) {
+  if(["lake-promenade","mountain-trail"].includes(location.id))return ` · 저녁 민준 고민 상담 ${formatEventProbability(MINJUN_ENCOUNTER_CHANCE)} · 하은 루트 10단계`;
+  if(["prime-gym","boxing-studio","protein-cafe"].includes(location.id))return ` · 저녁 재민 운동 퀴즈 ${formatEventProbability(JAEMIN_ENCOUNTER_CHANCE)} · 장소별 5문항`;
+  if(location.id==="neon-club")return ` · 저녁 준호 연인 정보 ${formatEventProbability(JUNHO_ENCOUNTER_CHANCE)}`;
+  return "";
 }
 
 function ensureGuideSettings() {

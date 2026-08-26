@@ -17,15 +17,15 @@ export const ACTIONS = {
   day: [
     { id:"day-idle", icon:"☁️", title:"아무것도 안 하기", desc:"점심시간 동안 조용히 쉬며 아무 행동도 하지 않는다.", costLabel:"변화 없음", timeCost:1, effects:{}, tag:"휴식" },
     { id:"focused-work", icon:"💼", title:"업무에 집중하기", desc:"성과를 내고 수입과 능력을 높인다.", costLabel:"수입 +₩45,000", timeCost:1, effects:{ money:45000, work:10, energy:-10, fatigue:9, stress:13, affection:-4 }, tag:"성공" },
-    { id:"lunch-date", icon:"🍝", title:"연인과 점심", desc:"잠깐이라도 얼굴을 보며 함께 식사한다.", costLabel:"₩38,000", timeCost:1, requirements:[{ stat:"money", operator:">=", value:38000, message:"자산 ₩38,000 이상 필요" }], effects:{ money:-38000, affection:12, trust:8, stress:-7 }, tag:"데이트" },
+    { id:"lunch-date", icon:"🍝", title:"연인과 점심", desc:"잠깐이라도 얼굴을 보며 함께 식사한다.", costLabel:"₩38,000", timeCost:1, requirements:[{ stat:"money", operator:">=", value:38000, message:"자산 ₩38,000 이상 필요" }], effects:{ money:-38000, affection:5, trust:5, stress:-1 }, tag:"데이트" },
     { id:"coworker-lunch", icon:"👥", title:"동료와 점심", desc:"회사 사람들과 가까워지고 정보를 얻는다.", costLabel:"₩14,000", timeCost:1, effects:{ money:-14000, social:9, work:4, affection:-2 }, tag:"인간관계" },
     { id:"stock-check", icon:"📈", title:"주식 확인하기", desc:"변동성 있는 시장에 작은 승부를 건다.", costLabel:"위험", timeCost:1, random:true, effects:{ stress:5 }, tag:"투자" }
   ],
   evening: [
     { id:"evening-go-home", icon:"🏠", title:"집으로 가기", desc:"약속을 잡지 않고 곧바로 귀가해 저녁 7시부터 집에서 시간을 보낸다.", costLabel:"19:00 귀가", timeCost:1, nightArrivalMinutes:19*60, effects:{ stress:-4, fatigue:-3, energy:4 }, tag:"귀가" },
-    { id:"dinner-date", icon:"🌙", title:"근사한 데이트", desc:"예약해 둔 레스토랑에서 특별한 저녁을 보낸다.", costLabel:"₩120,000", timeCost:1, requirements:[{ stat:"money", operator:">=", value:120000, message:"자산 ₩120,000 이상 필요" },{ stat:"energy", operator:">=", value:10, message:"체력 10 이상 필요" }], effects:{ money:-120000, affection:24, trust:12, stress:-12, energy:-8 }, tag:"데이트" },
+    { id:"dinner-date", icon:"🌙", title:"근사한 데이트", desc:"예약해 둔 레스토랑에서 특별한 저녁을 보낸다.", costLabel:"₩120,000", timeCost:1, requirements:[{ stat:"money", operator:">=", value:120000, message:"자산 ₩120,000 이상 필요" },{ stat:"energy", operator:">=", value:10, message:"체력 10 이상 필요" }], effects:{ money:-120000, affection:13, trust:5, stress:-2, energy:-8, health:-1 }, tag:"데이트" },
     { id:"gift-shopping", icon:"🛍️", title:"선물 쇼핑", desc:"그녀가 좋아할 만한 작은 선물을 고른다.", costLabel:"₩75,000", timeCost:1, itemId:"rose-parfum", itemOwner:"gift", autoGift:true, effects:{ money:-75000, charm:3, confidence:2 }, tag:"쇼핑" },
-    { id:"overtime", icon:"🌃", title:"야근하기", desc:"관계보다 오늘의 성과를 선택한다.", costLabel:"수입 +₩70,000", timeCost:1, effects:{ money:70000, work:12, affection:-12, energy:-16, fatigue:16, stress:20 }, tag:"성공" },
+    { id:"overtime", icon:"🌃", title:"야근하기", desc:"관계보다 오늘의 성과를 선택한다.", costLabel:"수입 +₩70,000", timeCost:1, effects:{ money:70000, work:1, affection:-7, energy:-16, health:-5, fatigue:10, stress:11 }, tag:"성공" },
     { id:"coworker-drinks", icon:"🍻", title:"동료의 술자리", desc:"새로운 인맥, 혹은 위험한 인연이 시작될 수 있다.", costLabel:"₩45,000 · 위험", timeCost:1, effects:{ money:-45000, social:12, trust:-8, stress:-8 }, tag:"유혹" }
   ],
   night: [

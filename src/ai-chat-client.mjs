@@ -1,4 +1,4 @@
-import { generateContextualReply } from "./conversation-manager.mjs";
+import { generateContextualReply } from "./conversation-manager.mjs?v=10";
 
 const EFFECT_KEYS = new Set(["affection","trust","excitement","attachment","conflict","relationshipStress","stress","health","energy","fatigue","charm","fashion","confidence","work","social"]);
 

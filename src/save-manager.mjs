@@ -1,5 +1,5 @@
-import { validateState } from "./game-core.mjs?v=8";
-import { migrateNpcRoster } from "./npc-manager.mjs";
+import { validateState } from "./game-core.mjs?v=13";
+import { migrateNpcRoster } from "./npc-manager.mjs?v=2";
 import { migrateHeroineProfile } from "./girlfriend-manager.mjs?v=6";
 import { migrateInvestmentState } from "./investment-manager.mjs?v=2";
 import { createLotteryState } from "./lottery-manager.mjs";
@@ -12,6 +12,8 @@ import { migrateJob } from "./jobs-data.mjs?v=6";
 import { migratePlayerProfile } from "./player-profile-data.mjs";
 import { migrateWorldState } from "./world-map-manager.mjs";
 import { migrateScenarioState, normalizeGameMode } from "./scenario-state.mjs";
+import { migrateYujinSecretRouteState } from "./yujin-secret-route.mjs";
+import { migrateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=3";
 
 export class SaveManager {
   static key = "today-day-one.save.v1";
@@ -46,6 +48,8 @@ export class SaveManager {
       migrateVisualState(parsed);
       parsed.npcs=migrateNpcRoster(parsed.npcs);
       parsed.npcHistory ??= [];
+      parsed.worldEncounterHistory ??= [];
+      parsed.worldEncounterRoutes = migrateWorldEncounterRoutes(parsed.worldEncounterRoutes);
       parsed.temptationHistory ??= [];
       parsed.rivalHistory ??= [];
       parsed.breakup ??= null;
@@ -59,6 +63,7 @@ export class SaveManager {
       parsed.cgCollection ??= [];
       parsed.videoCollection ??= [];
       parsed.conversationSafety ??= {hostileCount:0,lastHostileDay:null};
+      parsed.yujinSecretRoute = migrateYujinSecretRouteState(parsed.yujinSecretRoute);
       parsed.situationEventStates ??= {};
       parsed.futureEventWeights ??= {};
       parsed.microEventHistory ??= [];

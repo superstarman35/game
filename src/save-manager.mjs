@@ -70,7 +70,9 @@ export class SaveManager {
         guideCompleted:{
           main:Boolean(savedGuideCompleted?.main),
           atlas:Boolean(savedGuideCompleted?.atlas),
-          district:Boolean(savedGuideCompleted?.district)
+          district:Boolean(savedGuideCompleted?.district),
+          room:Boolean(savedGuideCompleted?.room),
+          map:Boolean(savedGuideCompleted?.map)
         }
       };
       parsed.hiddenRoute ??= createHiddenRouteState(Math.random,false);

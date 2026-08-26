@@ -43,6 +43,7 @@ export const NPC_ASSETS = {
   "investor-friend":"assets/npcs/investor-friend.png",
   "drinking-friend":"assets/npcs/drinking-friend.png",
   "love-advisor":"assets/npcs/love-advisor.png",
+  "hospital-nurse":"assets/npcs/hospital-nurse.png",
   "male-rival":"assets/npcs/male-rival-clean.png",
   "player-ex":"assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=2"
 };

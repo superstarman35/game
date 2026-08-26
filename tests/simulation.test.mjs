@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { advanceTime, applyEffects, createInitialState, determineEnding, MAX_DAY, validateState } from "../src/game-core.mjs";
 import { getWrappedFocusIndex } from "../src/ui-manager.mjs";
 import { SaveManager } from "../src/save-manager.mjs";
@@ -134,6 +134,10 @@ discoverLocation(localWorld,"small-cafe",3);
 assert.ok(localWorld.discoveredLocations.includes("small-cafe"));
 assert.equal(localWorld.visitHistory.at(-1).day,3);
 assert.equal(validateWorldState(migrateWorldState(null,{archetypeId:"balanced"})),true);
+const gameSource=readFileSync("game.js","utf8");
+for(const guideTarget of ['[data-room-action="phone"]','[data-room-action="pc"]','[data-room-action="wardrobe"]','[data-room-action="report"]','[data-room-action="exit"]','[data-room-action="bed"]',"#worldAtlasButton","#worldTransportButton","#worldMapCanvas",".world-dpad","#returnHomeButton",".world-clock","#worldLocationLayer"]){
+  assert.ok(gameSource.includes(guideTarget),`가이드 대상 누락: ${guideTarget}`);
+}
 console.log("✓ 캐릭터별 방·도로 제한 이동·남자/고급차 마커·서울/부산/전국 지도·이동수단 검증 통과");
 
 assert.equal(PLAYER_ARCHETYPES.length,3);
@@ -160,7 +164,7 @@ assert.equal(configuredStart.player.name,"민준이");
 assert.equal(configuredStart.job.id,"used-car-dealer");
 assert.equal(configuredStart.money>=5000000,true);
 assert.equal(configuredStart.settings.guideEnabled,true);
-assert.deepEqual(configuredStart.settings.guideCompleted,{main:false,atlas:false,district:false});
+assert.deepEqual(configuredStart.settings.guideCompleted,{main:false,atlas:false,district:false,room:false,map:false});
 assert.equal(validateState(configuredStart),true);
 const campaignStart=createInitialState(selectedPartner,()=>0.5,{mode:GAME_MODES.MARRIAGE_30,player:premiumPlayer,job:JOBS.find((job)=>job.id==="used-car-dealer")});
 assert.equal(campaignStart.gameMode,GAME_MODES.MARRIAGE_30);
@@ -567,6 +571,8 @@ assert.match(getNpcSprite("edit-shop-staff"),/edit-shop-staff\.png$/);
 assert.match(getNpcSprite("asset-advisor"),/asset-advisor\.png$/);
 assert.match(getNpcSprite("best-friend"),/best-friend\.png$/);
 assert.match(getNpcSprite("gym-trainer"),/gym-trainer\.png$/);
+assert.match(getNpcSprite("hospital-nurse"),/hospital-nurse\.png$/);
+assert.notEqual(getNpcSprite("hospital-nurse"),getNpcSprite("female-coworker"));
 assert.match(getNpcSprite("unknown-npc"),/male-support-clean\.png$/);
 assert.equal(resolveCharacterExpression({conflict:0,trust:500,stress:80,affection:500}).tone,"worried");
 assert.equal(resolveCharacterExpression({conflict:0,trust:500,stress:20,affection:800}).tone,"smile");
@@ -946,7 +952,7 @@ assert.equal(validateHiddenRouteState(migratedSave.hiddenRoute),true);
 assert.equal(migratedSave.hiddenRoute.active,false);
 assert.equal(validateStoryDirectorState(migratedSave.storyDirector),true);
 assert.equal(migratedSave.settings.guideEnabled,true);
-assert.deepEqual(migratedSave.settings.guideCompleted,{main:false,atlas:false,district:false});
+assert.deepEqual(migratedSave.settings.guideCompleted,{main:false,atlas:false,district:false,room:false,map:false});
 assert.equal(migratedSave.gameMode,GAME_MODES.FREE_ROMANCE);
 assert.equal(migratedSave.scenario.enabled,false);
 assert.equal(validateScenarioState(migratedSave.gameMode,migratedSave.scenario),true);

@@ -1,5 +1,5 @@
-import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=10";
-import { SaveManager } from "./src/save-manager.mjs?v=14";
+import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=11";
+import { SaveManager } from "./src/save-manager.mjs?v=15";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
 import { getEventDiagnostics, rollEvent } from "./src/event-manager.mjs?v=8";
 import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=7";
@@ -35,7 +35,7 @@ import { recordMemory } from "./src/memory-manager.mjs";
 import { maybeGenerateInitiatedMessage } from "./src/initiated-message-manager.mjs?v=6";
 import { getWrappedFocusIndex } from "./src/ui-manager.mjs";
 import { renderCharacter, resolveCharacterAccessory, resolveCharacterExpression, resolveCharacterOutfit, resolveCharacterPose } from "./src/ui/character-renderer.mjs?v=10";
-import { getBackgroundAsset, getGiftVehicleAsset, getNpcSprite } from "./src/assets/asset-manifest.mjs?v=13";
+import { getBackgroundAsset, getGiftVehicleAsset, getNpcSprite } from "./src/assets/asset-manifest.mjs?v=14";
 import { getAvailableStoryChoices, getStoryScene, resolveStoryChoice, selectNextStoryScene } from "./src/story-manager.mjs?v=6";
 import { STORY_SCENES } from "./src/story-data.mjs";
 import { createDaySnapshot, ensureNightState, formatNightTime, getDailyReport, getLateSleepEffects, resetForNextDay, setNightStartTime, spendNightTime } from "./src/night-manager.mjs?v=2";
@@ -107,12 +107,29 @@ const FREE_MODE_GUIDES=Object.freeze({
       {target:".atlas-destination-grid,.atlas-city-card",title:"도시와 동네 선택",description:"가고 싶은 도시나 동네를 선택하면 해당 생활권의 이동 맵으로 이동합니다. 지역마다 만날 수 있는 장소와 이벤트가 다릅니다."}
     ])
   }),
-  district:Object.freeze({
-    label:"동네 이동 맵",
+  room:Object.freeze({
+    label:"나의 방",
     steps:Object.freeze([
-      {target:".world-map-header",title:"현재 지역과 이동수단",description:"현재 동네, 시간과 선택한 이동수단을 확인합니다. 지도 보기 버튼으로 다른 도시와 동네도 선택할 수 있습니다."},
-      {target:"#worldMapCanvas",title:"맵에서 직접 이동",description:"방향키·화면 이동 버튼 또는 맵 터치로 캐릭터를 움직입니다. 장소 가까이 도착하면 해당 장소가 발견됩니다."},
-      {target:".world-map-footer",title:"장소 확인과 입장",description:"가까운 장소의 설명을 확인하고 장소 입장 버튼을 누르세요. 이동에는 밤 시간과 교통비가 사용될 수 있습니다."}
+      {target:".night-home-header",title:"밤 시간과 오늘의 날짜",description:"하루의 네 가지 행동을 마치면 내 방에서 밤 시간을 보냅니다. 오른쪽 시계를 확인하며 취침 전 활동 시간을 관리하세요."},
+      {target:'[data-room-action="phone"]',title:"스마트폰 · 메시지와 생활 관리",description:"여자친구 메시지를 확인하고 쇼핑, 투자 등 생활 메뉴를 이용합니다. 메시지를 읽지 않고 자면 관계 수치가 내려갈 수 있습니다."},
+      {target:'[data-room-action="pc"]',title:"컴퓨터 · 60분 활동",description:"게임으로 스트레스를 풀거나 자기계발과 야간 업무를 할 수 있습니다. 활동마다 60분이 흐르고 피로와 체력이 달라집니다."},
+      {target:'[data-room-action="wardrobe"]',title:"옷장 · 내일의 스타일",description:"보유한 의상과 아이템을 확인하고 착용 상태를 바꿉니다. 패션과 매력 보너스는 다음 선택에도 반영됩니다."},
+      {target:'[data-room-action="report"]',title:"DAY REPORT · 오늘의 변화",description:"오늘 변한 자산, 능력치, 관계 수치와 활동 기록을 한눈에 확인합니다. 잠들기 전에 하루의 결과를 점검해 보세요."},
+      {target:'[data-room-action="exit"]',title:"데이트/외출 · 동네 지도로",description:"내 방을 나가 동네 지도에서 식당, 카페, 상점과 특별 장소를 방문합니다. 이동과 방문에는 밤 시간이 사용됩니다."},
+      {target:'[data-room-action="bed"]',title:"침대 · 저장하고 다음 날로",description:"취침하면 현재 상태를 저장하고 다음 날로 넘어갑니다. 25시 이후에는 피로가 추가되고, 26시에는 건강과 체력까지 불리해지므로 가능하면 25시 전에 잠드세요."}
+    ])
+  }),
+  map:Object.freeze({
+    label:"동네 지도",
+    steps:Object.freeze([
+      {target:"#worldAtlasButton",title:"지도 보기 · 다른 지역 선택",description:"전국·서울·부산 지도를 열어 다른 도시와 동네를 선택합니다. 지역마다 장소, 상점과 발생 가능한 이벤트가 달라집니다."},
+      {target:"#worldTransportButton",title:"이동수단 선택",description:"도보, 버스, 택시, 지하철과 보유 차량 중 이동수단을 고릅니다. 수단에 따라 이동 칸 수, 시간과 비용이 달라집니다."},
+      {target:"#worldMapCanvas",title:"도로를 따라 직접 이동",description:"맵을 누르거나 키보드 방향키·WASD를 사용하면 캐릭터가 가까운 도로 칸으로 이동합니다. 길이 아닌 곳으로는 이동할 수 없습니다."},
+      {target:".world-dpad",title:"화면 이동 버튼",description:"마우스나 터치 환경에서는 아래 방향 버튼으로 한 번씩 이동하세요. 이동할 때마다 선택한 교통수단의 시간과 비용이 적용됩니다."},
+      {target:".world-map-footer",title:"장소 발견과 입장",description:"장소 가까이 도착하면 이름과 설명이 표시되고 입장 버튼이 활성화됩니다. 방문하면 보통 20분이 흐릅니다."},
+      {target:"#returnHomeButton",title:"내 방으로 돌아가기",description:"어디에 있든 이 버튼으로 즉시 내 방 화면으로 돌아갈 수 있습니다. 지도에서 집 아이콘 가까이 이동해 ‘귀가하기’를 눌러도 됩니다."},
+      {target:".world-clock",title:"상점 영업 종료 시간",description:"대부분의 카페, 식당과 상점은 밤 10시(22:00)에 영업을 종료합니다. 술집·심야 장소와 특별 이벤트가 열린 장소는 예외적으로 입장할 수 있습니다."},
+      {target:"#worldLocationLayer",title:"장소별 이벤트 발생",description:"장소에 입장하면 관계 수치, 시간대, 이전 선택과 확률에 따라 대화·데이트·특별 사건이 발생할 수 있습니다. 선택 결과는 관계 수치와 오늘의 기록에 반영됩니다."}
     ])
   })
 });
@@ -935,6 +952,7 @@ function verifyPresentationAsset(presentation,backdrop){
 
 function renderNightHome() {
   syncOutfitCharacterMedia(true);
+  const nightHome=$("#nightHome"),wasHidden=nightHome.classList.contains("hidden");
   const night = ensureNightState(state);
   checkLateNightInvitation();
   const home=getPlayerHomeProfile(state.player?.archetypeId);
@@ -943,7 +961,7 @@ function renderNightHome() {
   $("#gameScreen").classList.remove("story-mode","classic-mode");
   $("#gameScreen").classList.add("night-mode");
   $(".play-panel").classList.add("hidden");
-  $("#nightHome").classList.remove("hidden");
+  nightHome.classList.remove("hidden");
   $("#worldMap").classList.add("hidden");
   const roomScene=$("#nightRoomScene");
   roomScene.classList.add("has-room-background");
@@ -957,6 +975,7 @@ function renderNightHome() {
   $("#nightHomeTip").textContent = night.activities.length ? `오늘 밤: ${night.activities.map(item=>item.label).join(" · ")}` : "밤 활동은 시간을 사용합니다. 늦게 잘수록 내일 더 피곤해져요.";
   const soundKey = `${state.day}-night-home`;
   if (soundKey !== lastSceneSoundKey) { lastSceneSoundKey=soundKey;sound.playScene("night",state.day); }
+  if(wasHidden)setTimeout(()=>startGuide("room"),0);
 }
 
 function renderWorldMap() {
@@ -996,7 +1015,7 @@ function openWorldMap() {
   if(!Number.isFinite(state.world.x)||!Number.isFinite(state.world.y)){state.world.x=map.start.x;state.world.y=map.start.y;}
   SaveManager.save(state);renderWorldMap();
   const continueToTransport=()=>{if(!state.world.transportConfirmed)openTransportSelector(true);};
-  setTimeout(()=>{if(!startGuide("district",{onFinish:continueToTransport}))continueToTransport();},0);
+  setTimeout(()=>{if(!startGuide("map",{onFinish:continueToTransport}))continueToTransport();},0);
 }
 
 function returnToNightHome() { state.world.mode="home";SaveManager.save(state);renderNightHome(); }
@@ -1773,7 +1792,7 @@ function ensureGuideSettings() {
   if(!state)return null;
   state.settings??={};
   state.settings.guideEnabled=state.settings.guideEnabled!==false;
-  state.settings.guideCompleted={main:false,atlas:false,district:false,...(state.settings.guideCompleted??{})};
+  state.settings.guideCompleted={main:false,atlas:false,district:false,room:false,map:false,...(state.settings.guideCompleted??{})};
   return state.settings;
 }
 
@@ -1792,7 +1811,8 @@ function renderGuideToggle() {
 function getCurrentGuideType() {
   if(!isFreeModeGuideAvailable())return null;
   if(!$("#modal").classList.contains("hidden")&&$("#modalContent").querySelector(".atlas-tabs"))return "atlas";
-  if(!$("#worldMap").classList.contains("hidden"))return "district";
+  if(!$("#worldMap").classList.contains("hidden"))return "map";
+  if(!$("#nightHome").classList.contains("hidden"))return "room";
   if(!$("#gameScreen").classList.contains("hidden")&&state.phase!==3)return "main";
   return null;
 }
@@ -1833,7 +1853,7 @@ function renderGuideStep() {
 function startGuide(type,{manual=false,onFinish=null}={}) {
   const definition=FREE_MODE_GUIDES[type],settings=ensureGuideSettings();
   if(!definition||!isFreeModeGuideAvailable()||!settings?.guideEnabled)return false;
-  if(!manual&&(state.day!==1||settings.guideCompleted[type]))return false;
+  if(!manual&&settings.guideCompleted[type])return false;
   if(activeGuide)stopGuide({complete:false,runContinuation:false});
   const steps=definition.steps.filter(step=>isGuideTargetAvailable(document.querySelector(step.target)));if(!steps.length)return false;
   activeGuide={type,definition,steps,index:0,target:null,onFinish};

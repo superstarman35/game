@@ -258,18 +258,6 @@ const STANDARD_STORY_SCENES = [
     ]
   },
   {
-    id:"contact-boundary", arc:"우리 정말 잘 맞는 걸까?", window:[4,6], priority:95, bgm:"theme",
-    title:"연락, 어느 정도가 좋아?", speaker:"여자친구", message:"서로의 하루를 공유하는 방식이 조금씩 다르다는 걸 느끼기 시작했다.",
-    choices:[
-      {id:"frequent",label:"틈날 때마다 자주 연락하자",effects:{},response:"우리에게 맞는 연락 속도를 찾아보기로 했다.",outcomes:[
-        {conditions:[{stat:"partner.personality.contactImportance",operator:">=",value:60}],effects:{affection:15,trust:10},response:"“나도 그래. 짧게라도 네 소식을 알면 안심돼.”"},
-        {conditions:[{stat:"partner.personality.independence",operator:">=",value:65}],effects:{affection:-5,relationshipStress:6},response:"“마음은 고마운데, 각자 집중할 시간도 있었으면 좋겠어.”"}
-      ],memory:"서로의 연락 빈도를 맞춘 대화"},
-      {id:"balanced",label:"바쁠 땐 미리 말하고 저녁에 이야기하자",effects:{trust:10,relationshipStress:-5},response:"“그 정도면 나도 편할 것 같아. 말없이 사라지는 것만 아니면 돼.”",memory:"연락 규칙을 함께 정한 날"},
-      {id:"independent",label:"연락 횟수로 사랑을 확인하지 말자",effects:{trust:2,excitement:-3},response:"“맞는 말이지만… 내 마음도 가볍게 보지는 않았으면 해.”",outcomes:[{conditions:[{stat:"partner.personality.independence",operator:">=",value:65}],effects:{trust:10,affection:8},response:"“나도 동의해. 대신 필요할 때는 솔직하게 말하자.”"}],memory:"각자의 시간을 존중하기로 한 약속"}
-    ]
-  },
-  {
     id:"coworker-introduction", arc:"흔들리는 마음", window:[5,7], priority:90, bgm:"theme",
     title:"여자친구 있으시다고 했죠?", speaker:"여성 동료", message:"야근 중 동료가 커피를 건네며 장난스럽게 웃었다. 아직은 평범한 직장 관계다.",
     choices:[

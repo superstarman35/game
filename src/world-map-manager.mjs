@@ -141,7 +141,7 @@ export const WORLD_ATLAS = Object.freeze({
 
 export const TRANSPORT_OPTIONS = Object.freeze([
   Object.freeze({id:"walk",name:"도보",icon:"🚶",cost:0,minutes:10,steps:1,effects:{energy:-1,fatigue:1},description:"1칸 · 10분 · 에너지 -1"}),
-  Object.freeze({id:"bus",name:"버스",icon:"🚌",cost:1500,minutes:7,steps:2,effects:{},description:"2칸 · 7분 · 승차 ₩1,500"}),
+  Object.freeze({id:"bus",name:"버스",icon:"🚌",cost:1500,minutes:5,steps:1,effects:{},description:"1칸 · 5분 · 승차 ₩1,500"}),
   Object.freeze({id:"subway",name:"지하철",icon:"🚇",cost:1400,minutes:5,steps:0,effects:{},fastTravel:"station",description:"역을 선택해 5분 만에 이동"}),
   Object.freeze({id:"taxi",name:"택시",icon:"🚕",cost:8000,minutes:3,steps:0,effects:{},fastTravel:"location",description:"장소 바로 이동 · 거리별 요금"}),
   Object.freeze({id:"car",name:"고급 자가용",icon:"🚘",cost:2500,minutes:4,steps:1,effects:{},requiresVehicle:true,description:"1칸 · 4분 · 주유·주차 ₩2,500"})

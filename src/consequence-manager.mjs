@@ -18,6 +18,7 @@ export function applySelfManagementModifiers(state, effects) {
 
 export function calculateActionEffects(state, action) {
   const effects = { ...action.effects };
+  const fixedEffects=Object.fromEntries((action.fixedEffects??[]).filter(key=>key in effects).map(key=>[key,effects[key]]));
   const personality = state.partner.personality;
   const notes = [];
   const equipment = getEquipmentBonuses(state);
@@ -65,5 +66,7 @@ export function calculateActionEffects(state, action) {
   const jobEffects = applyJobModifiers(state, action, effects);
   if ((state.fatigue ?? 0) >= 70) notes.push("피로 누적");
   if ((state.confidence ?? 0) >= 70) notes.push("높은 자신감");
-  return { effects:applySelfManagementModifiers(state, jobEffects), notes };
+  const resolvedEffects=applySelfManagementModifiers(state, jobEffects);
+  Object.assign(resolvedEffects,fixedEffects);
+  return { effects:resolvedEffects, notes };
 }

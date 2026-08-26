@@ -39,7 +39,7 @@ export function getNightOutingContext(minutes, partnerName="여자친구") {
   const name=String(partnerName),last=name.charCodeAt(name.length-1),hasBatchim=last>=0xac00&&last<=0xd7a3&&(last-0xac00)%28!==0;
   return {
     alone,
-    message:alone?"혼자 외출 나왔다.":`${name}${hasBatchim?"과":"와"} 같이 외출 나왔다.`
+    message:alone?"나혼자 외출 나왔다.":`${name}${hasBatchim?"이와":"와"} 같이 데이트/외출을 나왔다.`
   };
 }
 

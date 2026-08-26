@@ -2,7 +2,7 @@ import { applyEffects, clamp } from "./game-core.mjs";
 import { appendTransaction } from "./economy-manager.mjs";
 import { meetsConditions } from "./event-manager.mjs";
 import { recordMemory } from "./memory-manager.mjs";
-import { STORY_SCENES } from "./story-data.mjs";
+import { STORY_SCENES } from "./story-data.mjs?v=2";
 import { applyHiddenRouteEffects, getHiddenRouteSceneEffects } from "./hidden-route-manager.mjs";
 import { combineChoiceEffects, getMbtiChoiceAdjustment } from "./event-choice-modifier.mjs";
 import { isContentAvailableForMode } from "./scenario-state.mjs";
@@ -38,7 +38,11 @@ export function getEligibleStoryScenes(state, scenes = STORY_SCENES) {
 }
 
 export function selectNextStoryScene(state, scenes = STORY_SCENES) {
-  if (state.pendingStoryId) return getStoryScene(state.pendingStoryId,scenes);
+  if (state.pendingStoryId) {
+    const pendingScene = getStoryScene(state.pendingStoryId,scenes);
+    if (pendingScene) return pendingScene;
+    state.pendingStoryId = null;
+  }
   return getEligibleStoryScenes(state,scenes)[0] ?? null;
 }
 

@@ -8,8 +8,8 @@ export const PHASES = [
 export const ACTIONS = {
   morning: [
     { id:"morning-idle", icon:"☁️", title:"아무것도 안 하기", desc:"잠시 멈춰서 아무 계획 없이 시간을 보낸다.", costLabel:"변화 없음", timeCost:1, effects:{}, tag:"휴식" },
-    { id:"morning-contact", icon:"💬", title:"다정하게 연락하기", desc:"좋은 아침 인사로 서로의 하루를 시작한다.", costLabel:"시간 1", timeCost:1, effects:{ affection:16, trust:10, energy:-3 }, tag:"연락" },
-    { id:"morning-gym", icon:"🏃", title:"아침 운동", desc:"가볍게 뛰며 몸과 자신감을 관리한다.", costLabel:"시간 1", timeCost:1, requirements:[{ stat:"energy", operator:">=", value:12, message:"체력 12 이상 필요" }], effects:{ health:8, charm:5, confidence:5, fatigue:4, energy:-7, stress:-4 }, tag:"자기관리" },
+    { id:"morning-contact", icon:"💬", title:"다정하게 연락하기", desc:"좋은 아침 인사로 서로의 하루를 시작한다.", costLabel:"호감 +3 · 신뢰 +2", timeCost:1, fixedEffects:["affection","trust"], effects:{ affection:3, trust:2, energy:-3 }, tag:"연락" },
+    { id:"morning-gym", icon:"🏃", title:"아침 운동", desc:"가볍게 뛰며 몸과 자신감을 관리한다.", costLabel:"건강 +3", timeCost:1, requirements:[{ stat:"energy", operator:">=", value:12, message:"체력 12 이상 필요" }], effects:{ health:3, charm:1, confidence:1, fatigue:4, energy:-3, stress:-1 }, tag:"자기관리" },
     { id:"sleep-in", icon:"🛌", title:"조금 더 자기", desc:"피로를 풀지만 출근 준비는 아슬아슬하다.", costLabel:"시간 1", timeCost:1, effects:{ energy:15, fatigue:-22, work:-4, stress:-5 }, tag:"휴식" },
     { id:"early-work", icon:"☕", title:"일찍 출근하기", desc:"커피 한 잔과 함께 업무를 먼저 시작한다.", costLabel:"수입 +₩25,000", timeCost:1, effects:{ money:25000, work:8, energy:-8, fatigue:7, stress:8 }, tag:"성공" },
     { id:"manager-feedback", icon:"🗣️", title:"상사와 1:1 피드백", desc:"업무 조언을 얻어 성장 방향을 다듬는다.", costLabel:"스트레스 +5", timeCost:1, effects:{ work:7, confidence:4, stress:5, energy:-4 }, tag:"성장" }
@@ -85,6 +85,16 @@ const CAREER_ACTIONS = [
 ];
 CAREER_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push(action));
 
+export const PLAYER_JOB_REWARD_SCALE = 0.5;
+const PLAYER_JOB_REWARD_STATS = new Set(["health","charm","fashion","confidence","work","social","affection","trust","excitement","attachment"]);
+
+export function scalePlayerJobActionRewards(action) {
+  const scaleReward=value=>Math.max(1,Math.round(value*PLAYER_JOB_REWARD_SCALE));
+  const effects=Object.fromEntries(Object.entries(action.effects??{}).map(([key,value])=>[key,PLAYER_JOB_REWARD_STATS.has(key)&&value>0?scaleReward(value):value]));
+  const costLabel=String(action.costLabel??"").includes("₩")?action.costLabel:String(action.costLabel??"").replace(/\+(\d+)/,(_,value)=>`+${scaleReward(Number(value))}`);
+  return {...action,costLabel,effects};
+}
+
 const PLAYER_JOB_ACTIONS = [
   ["day",{id:"job-freelancer-pitch",icon:"🤝",title:"신규 프로젝트 제안하기",desc:"새 고객에게 포트폴리오와 견적을 제안한다.",costLabel:"수입 +₩65,000",timeCost:1,jobIds:["freelancer"],effects:{money:65000,work:8,social:5,stress:7},tag:"직업"}],
   ["evening",{id:"job-freelancer-cowork",icon:"💻",title:"공유 작업실에서 마감하기",desc:"집중할 수 있는 공간에서 프로젝트를 끝낸다.",costLabel:"업무 +10",timeCost:1,jobIds:["freelancer"],effects:{work:10,fatigue:8,stress:5,energy:-8},tag:"직업"}],
@@ -128,6 +138,8 @@ const ARCHETYPE_ACTIONS = [
 ARCHETYPE_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push(action));
 ACTIONS.day.push({id:"yuna-library-study",icon:"📚",title:"유나와 도서관 공부",desc:"시험과 진로 이야기를 나누며 함께 문제를 푼다.",costLabel:"₩8,000",timeCost:1,heroineIds:["yuna"],requirements:[{stat:"money",operator:">=",value:8000,message:"자산 ₩8,000 이상 필요"}],effects:{money:-8000,affection:14,trust:14,stress:-4,energy:-4},tag:"데이트"});
 ACTIONS.evening.push({id:"yuna-after-school-snack",icon:"🍢",title:"유나와 방과 후 분식",desc:"분식집에서 오늘 학교에서 있었던 일을 듣는다.",costLabel:"₩16,000",timeCost:1,heroineIds:["yuna"],requirements:[{stat:"money",operator:">=",value:16000,message:"자산 ₩16,000 이상 필요"}],effects:{money:-16000,affection:20,trust:9,excitement:8,stress:-7},tag:"데이트"});
+
+for(const phase of PHASES)ACTIONS[phase.key]=ACTIONS[phase.key].map(action=>action.jobIds?.length?scalePlayerJobActionRewards(action):action);
 
 export function validateActionData(actions = ACTIONS, phases = PHASES) {
   const ids = new Set();

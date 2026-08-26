@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css">
-  <link rel="stylesheet" href="styles.css?v=86">
+  <link rel="stylesheet" href="styles.css?v=88">
   <link rel="preload" as="image" href="assets/accessories/lavender-ribbon-star-pin.png">
   <link rel="preload" as="image" href="assets/characters/girlfriend-date-outfit-calm-2d.png">
   <link rel="preload" as="image" href="assets/characters/girlfriend-phone-calm-2d.png">
@@ -39,6 +39,7 @@
       </nav>
       <div class="top-actions">
         <button id="menuButton" class="text-button hidden" type="button">MENU</button>
+        <button id="guideToggleButton" class="text-button guide-toggle-button hidden" type="button" aria-pressed="true">가이드 ON</button>
         <button id="debugButton" class="text-button hidden" type="button">DEBUG</button>
         <button id="inventoryButton" class="text-button hidden" type="button">가방</button>
         <button id="shopButton" class="text-button hidden" type="button">상점</button>
@@ -217,6 +218,18 @@
     </section>
   </main>
 
+  <section id="guideOverlay" class="guide-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideDescription">
+    <div class="guide-blocker" aria-hidden="true"></div>
+    <div id="guideFocus" class="guide-focus" aria-hidden="true"></div>
+    <article id="guideCard" class="guide-card">
+      <div class="guide-card-head"><span id="guideSection">FREE MODE GUIDE</span><b id="guideStep">1 / 4</b></div>
+      <h2 id="guideTitle">자유모드 화면 안내</h2>
+      <p id="guideDescription"></p>
+      <button id="guideConfirmButton" class="primary-button" type="button">확인 · 다음</button>
+      <small>가이드를 끝내려면 오른쪽 위의 ‘가이드 ON’을 눌러 OFF로 변경하세요.</small>
+    </article>
+  </section>
+
   <button id="tipToolsButton" class="game-tools-trigger hidden" type="button" aria-controls="gameToolsLayer" aria-expanded="false">
     <span>TIP</span><b>게임 도구</b>
   </button>
@@ -257,6 +270,6 @@
     </article>
   </section>
   <div id="toast" class="toast"></div>
-  <script type="module" src="game.js?v=112"></script>
+  <script type="module" src="game.js?v=113"></script>
 </body>
 </html>

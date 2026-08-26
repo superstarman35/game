@@ -54,10 +54,13 @@ export function evaluateEventEligibility(state,event){
   if(event.excludedHeroineIds?.includes(state.partner?.heroineId))blocks.push("HEROINE_EXCLUDED");
   if(state.partner?.heroineId==="yuna"&&!event.studentSafe)blocks.push("STUDENT_SAFETY");
   const triggered=history.filter(record=>record.id===event.id);const last=triggered.at(-1);const cooldownRemaining=last?Math.max(0,event.cooldown-(state.day-last.day)):0;
+  const alreadyOccurred=triggered.length>0||Boolean(state.situationEventStates?.[event.id])||Boolean(event.storyFlag&&state.storyFlags?.[event.storyFlag])||Boolean(state.storyFlags?.[`${event.id}:TRIGGERED`]);
   if(event.kind==="micro")blocks.push("MICRO_SLOT");
   if(event.dayRange&&(state.day<event.dayRange[0]||state.day>event.dayRange[1]))blocks.push("DAY_RANGE");else if(event.dayRange)reasons.push(`DAY ${state.day} in ${event.dayRange.join("-")}`);
   if(event.timeOfDay&&event.timeOfDay!==phaseTime)blocks.push(`TIME_${phaseTime.toUpperCase()}`);else if(event.timeOfDay)reasons.push(`시간대 ${phaseTime}`);
-  if(event.maxTriggerCount&&triggered.length>=event.maxTriggerCount)blocks.push("MAX_TRIGGER_COUNT");
+  if(state.gameMode==="free-romance"&&alreadyOccurred)blocks.push("FREE_MODE_ALREADY_OCCURRED");
+  else if(event.repeatable===false&&alreadyOccurred)blocks.push("NON_REPEATABLE_EVENT");
+  else if(event.maxTriggerCount&&triggered.length>=event.maxTriggerCount)blocks.push("MAX_TRIGGER_COUNT");
   if(cooldownRemaining)blocks.push(`COOLDOWN_${cooldownRemaining}`);
   if(event.forbiddenFlags?.some(flag=>state.storyFlags?.[flag]))blocks.push("FORBIDDEN_FLAG");
   const missingEvents=(event.requiredEvents??[]).filter(id=>!state.storyFlags?.[`${id}:COMPLETED`]);if(missingEvents.length)blocks.push(`CHAIN_REQUIRED:${missingEvents.join(",")}`);else if(event.requiredEvents?.length)reasons.push(`선행 ${event.requiredEvents.length}개 완료`);

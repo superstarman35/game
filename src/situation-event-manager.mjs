@@ -5,10 +5,20 @@ import { combineChoiceEffects, getMbtiChoiceAdjustment } from "./event-choice-mo
 
 export function getSituationEvent(id){return SITUATION_EVENTS.find(event=>event.id===id)??null;}
 
+export function hasSituationEventOccurred(state,event) {
+  return Boolean(
+    state.situationEventStates?.[event.id]||
+    state.storyFlags?.[event.storyFlag]||
+    state.storyFlags?.[`${event.id}:TRIGGERED`]||
+    (state.eventHistory??[]).some(entry=>entry.id===event.id)
+  );
+}
+
 export function getSituationEventState(state,event) {
   const saved=state.situationEventStates?.[event.id];
   if(saved?.status)return saved.status;
   if(state.storyFlags?.[event.storyFlag])return "COMPLETED";
+  if(hasSituationEventOccurred(state,event))return "COMPLETED";
   if(state.day<event.dayRange[0]||state.day>event.dayRange[1])return "LOCKED";
   if(event.forbiddenFlags.some(flag=>state.storyFlags?.[flag]))return "LOCKED";
   if(event.npcRequirements.length&&!event.npcRequirements.every(id=>state.npcs?.some(npc=>npc.id===id&&npc.active)))return "LOCKED";
@@ -16,6 +26,8 @@ export function getSituationEventState(state,event) {
 }
 
 export function activateSituationEvent(state,event) {
+  state.storyFlags??={};
+  state.storyFlags[`${event.id}:TRIGGERED`]=true;
   state.situationEventStates??={};
   state.situationEventStates[event.id]={status:"ACTIVE",startedDay:state.day,sceneIndex:0,choiceId:null};
   return state.situationEventStates[event.id];

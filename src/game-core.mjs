@@ -103,7 +103,7 @@ export function createInitialState(partner, random = Math.random, setup = {}) {
     situationEventStates: {},
     futureEventWeights: {},
     eventRuntime: {activeEvent:null,scene:null,dialogueIndex:0,state:"IDLE",inputLock:{locked:false,owner:null,reason:null,lockedFor:0},eventQueue:[],microQueue:[],pendingEvent:null,triggerReason:[],assetStatus:"IDLE",checkpoint:null,lastError:null,logs:[]},
-    settings: {theaterMode:true},
+    settings: {theaterMode:true,guideEnabled:true,guideCompleted:{main:false,atlas:false,district:false}},
     ended: false,
     nightState: null,
     dayStartSnapshot: null,

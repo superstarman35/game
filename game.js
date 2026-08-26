@@ -1,9 +1,9 @@
-import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=9";
-import { SaveManager } from "./src/save-manager.mjs?v=13";
+import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=10";
+import { SaveManager } from "./src/save-manager.mjs?v=14";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
-import { getEventDiagnostics, rollEvent } from "./src/event-manager.mjs?v=7";
+import { getEventDiagnostics, rollEvent } from "./src/event-manager.mjs?v=8";
 import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=7";
-import { resolveSituationEventChoice, rollLocationSituationEvent } from "./src/situation-event-manager.mjs?v=5";
+import { resolveSituationEventChoice, rollLocationSituationEvent } from "./src/situation-event-manager.mjs?v=6";
 import { EventRuntimeManager } from "./src/event-runtime-manager.mjs?v=4";
 import { getMicroEventDiagnostics, rollMicroEvents } from "./src/micro-event-manager.mjs?v=5";
 import { auditEventSystems } from "./src/event-audit.mjs?v=4";
@@ -90,6 +90,33 @@ const runtimeWatchdogTimer=setInterval(()=>eventRuntime.watchdog(),1000);
 const modalFocusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 const THEATER_SETTING_KEY="today-day-one-theater-mode";
 const GAMEPLAY_EVENTS_START_DAY = 4;
+const FREE_MODE_GUIDES=Object.freeze({
+  main:Object.freeze({
+    label:"메인 화면",
+    steps:Object.freeze([
+      {target:".profile-panel",title:"왼쪽 패널 · 여자친구 정보",description:"여자친구의 호감도와 신뢰도, 알아낸 성향을 확인합니다. 아래 메시지 버튼으로 직접 대화할 수도 있습니다."},
+      {target:".action-selection-panel",title:"가운데 · 오늘의 행동 선택",description:"현재 시간대에 할 행동을 고르는 영역입니다. 원하는 행동을 선택한 뒤 결정 버튼을 누르면 시간과 능력치가 반영됩니다."},
+      {target:".life-panel",title:"오른쪽 패널 · 나의 하루",description:"보유 자산과 체력, 피로, 건강, 스트레스 등 주인공의 상태를 확인합니다. 오늘의 기록과 인맥 관리도 여기서 열 수 있습니다."},
+      {target:".girlfriend-warehouse-panel",title:"하단 · 보관함",description:"구매한 여자친구 의상과 쇼핑 아이템이 저장되는 곳입니다. 의상은 이곳에서 바로 갈아입힐 수 있습니다."}
+    ])
+  }),
+  atlas:Object.freeze({
+    label:"지도 보기",
+    steps:Object.freeze([
+      {target:".atlas-tabs",title:"지도 범위 선택",description:"전국·서울·부산 탭을 눌러 확인할 지역의 범위를 바꿀 수 있습니다."},
+      {target:".atlas-destination-grid,.atlas-city-card",title:"도시와 동네 선택",description:"가고 싶은 도시나 동네를 선택하면 해당 생활권의 이동 맵으로 이동합니다. 지역마다 만날 수 있는 장소와 이벤트가 다릅니다."}
+    ])
+  }),
+  district:Object.freeze({
+    label:"동네 이동 맵",
+    steps:Object.freeze([
+      {target:".world-map-header",title:"현재 지역과 이동수단",description:"현재 동네, 시간과 선택한 이동수단을 확인합니다. 지도 보기 버튼으로 다른 도시와 동네도 선택할 수 있습니다."},
+      {target:"#worldMapCanvas",title:"맵에서 직접 이동",description:"방향키·화면 이동 버튼 또는 맵 터치로 캐릭터를 움직입니다. 장소 가까이 도착하면 해당 장소가 발견됩니다."},
+      {target:".world-map-footer",title:"장소 확인과 입장",description:"가까운 장소의 설명을 확인하고 장소 입장 버튼을 누르세요. 이동에는 밤 시간과 교통비가 사용될 수 있습니다."}
+    ])
+  })
+});
+let activeGuide=null;
 
 function areGameplayEventsUnlocked(day=state?.day) { return Number(day) >= GAMEPLAY_EVENTS_START_DAY; }
 function isCampaignPrologueStory(id) { return state?.scenario?.enabled===true && String(id??"").startsWith("m30-day"); }
@@ -771,7 +798,7 @@ function playNextIntroVideo() {
 function unlockIntroStart(message="프롤로그가 끝났습니다. 이제 게임을 시작하세요.") { $("#introPlaybackHint").textContent=message; $("#introGameStartButton").disabled=false; }
 function finishOnboarding() { state=onboarding.previewState; SaveManager.save(state); showGame(); }
 function startGame() { if(titleTransitioning)return;titleTransitioning=true;$("#startButton").disabled=true;beginOnboarding(); }
-function showGame() { requestInitialFullscreen(); state.actionHistory ??= []; $("#introScreen").classList.add("hidden"); $("#onboardingScreen").classList.add("hidden"); $("#storyIntroScreen").classList.add("hidden"); $("#gameScreen").classList.remove("hidden"); markScreenArrival($("#gameScreen")); $("#menuButton").classList.remove("hidden"); $("#fullscreenButton").classList.remove("hidden"); $(".story-toolbar").classList.toggle("hidden",state.scenario?.enabled!==true); $("#tipToolsButton").classList.remove("hidden"); $("#loadButton").classList.add("hidden"); state.settings??={};state.settings.theaterMode=true;localStorage.setItem(THEATER_SETTING_KEY,"true");document.body.classList.add("theater-mode");renderAutoButton();renderFullscreenButtons();render();setTimeout(()=>{restoreEventCheckpoint();if(!state.eventRuntime?.activeEvent){const story=selectNextStoryScene(state);if(isCampaignPrologueStory(story?.id))openStoryScene(story);}},0); }
+function showGame() { requestInitialFullscreen(); state.actionHistory ??= []; $("#introScreen").classList.add("hidden"); $("#onboardingScreen").classList.add("hidden"); $("#storyIntroScreen").classList.add("hidden"); $("#gameScreen").classList.remove("hidden"); markScreenArrival($("#gameScreen")); $("#menuButton").classList.remove("hidden"); $("#fullscreenButton").classList.remove("hidden"); $(".story-toolbar").classList.toggle("hidden",state.scenario?.enabled!==true); $("#tipToolsButton").classList.remove("hidden"); $("#loadButton").classList.add("hidden"); state.settings??={};state.settings.theaterMode=true;localStorage.setItem(THEATER_SETTING_KEY,"true");document.body.classList.add("theater-mode");renderAutoButton();renderFullscreenButtons();render();setTimeout(()=>{restoreEventCheckpoint();if(!state.eventRuntime?.activeEvent){const story=selectNextStoryScene(state);if(isCampaignPrologueStory(story?.id))openStoryScene(story);else maybeStartCurrentGuide();}},0); }
 function money(value) { return `₩ ${Math.round(value).toLocaleString("ko-KR")}`; }
 function outfitImageUrl(item) { return item?.heroineId==="haeun"&&item?.productImage?`${item.productImage}?v=8`:item?.productImage??""; }
 function getStoredItemDescription(item){const tags=(item.styleTags??item.preferenceTags??[]).join(" · ");return `${tags||item.category} 아이템 · 매력 +${item.attractivenessBonus??0} · 패션 +${item.fashionBonus??0}`;}
@@ -819,6 +846,7 @@ function render() {
   $("#gameScreen").classList.toggle("campaign-story-mode",storyCampaign);
   $("#gameScreen").classList.toggle("campaign-free-mode",!storyCampaign);
   document.body.dataset.gameMode=storyCampaign?"story":"free";
+  renderGuideToggle();
   document.body.dataset.heroine=p.heroineId;document.documentElement.style.setProperty("--heroine-accent",p.uiAccent??"#ff91b5");
   $("#dayLabel").textContent = `${state.day} · ${getWeekdayName(state.day)}`; $("#phaseIcon").textContent = phase.icon;
   const mode=getGameModeConfig(state.gameMode),modeBadge=$("#gameModeBadge");modeBadge.textContent=storyCampaign?`STORY · D-${Math.max(0,31-state.day)}`:"FREE MODE";modeBadge.classList.remove("hidden");modeBadge.dataset.mode=mode.id;modeBadge.setAttribute("aria-label",storyCampaign?`${mode.title}, 결혼식까지 ${Math.max(0,31-state.day)}일`:mode.title);
@@ -967,7 +995,8 @@ function openWorldMap() {
   state.world.mode="district";state.world.cityId="seoul";state.world.districtId=home.districtId;
   if(!Number.isFinite(state.world.x)||!Number.isFinite(state.world.y)){state.world.x=map.start.x;state.world.y=map.start.y;}
   SaveManager.save(state);renderWorldMap();
-  if(!state.world.transportConfirmed)setTimeout(()=>openTransportSelector(true),0);
+  const continueToTransport=()=>{if(!state.world.transportConfirmed)openTransportSelector(true);};
+  setTimeout(()=>{if(!startGuide("district",{onFinish:continueToTransport}))continueToTransport();},0);
 }
 
 function returnToNightHome() { state.world.mode="home";SaveManager.save(state);renderNightHome(); }
@@ -1084,6 +1113,7 @@ function openWorldAtlas(viewId=state.world.atlasView||"nationwide") {
   document.querySelectorAll("[data-atlas-view]").forEach(button=>button.addEventListener("click",()=>openWorldAtlas(button.dataset.atlasView)));
   document.querySelectorAll("[data-travel-district]").forEach(button=>button.addEventListener("click",()=>{travelToCity(state.world,"seoul",button.dataset.travelDistrict);SaveManager.save(state);closeModal();renderWorldMap();toast("서울 생활권으로 이동했습니다.");}));
   document.querySelectorAll("[data-travel-city]").forEach(button=>button.addEventListener("click",()=>{const result=travelToCity(state.world,button.dataset.travelCity,homeDistrict);if(!result.ok){toast(result.reason);return;}SaveManager.save(state);closeModal();renderWorldMap();toast(`${result.map.name}으로 이동했습니다.`);}));
+  setTimeout(()=>startGuide("atlas"),0);
 }
 
 function getVenueMenu(location) {
@@ -1739,9 +1769,106 @@ function openTitleIntroduction(){
   $("#introductionStartButton").addEventListener("click",()=>{closeModal();startGame();});
 }
 
+function ensureGuideSettings() {
+  if(!state)return null;
+  state.settings??={};
+  state.settings.guideEnabled=state.settings.guideEnabled!==false;
+  state.settings.guideCompleted={main:false,atlas:false,district:false,...(state.settings.guideCompleted??{})};
+  return state.settings;
+}
+
+function isFreeModeGuideAvailable() { return Boolean(state&&state.gameMode==="free-romance"&&state.scenario?.enabled!==true); }
+
+function renderGuideToggle() {
+  const button=$("#guideToggleButton");if(!button)return;
+  const available=isFreeModeGuideAvailable();button.classList.toggle("hidden",!available);
+  if(!available)return;
+  const enabled=ensureGuideSettings().guideEnabled;
+  button.textContent=`가이드 ${enabled?"ON":"OFF"}`;
+  button.setAttribute("aria-pressed",String(enabled));
+  button.setAttribute("aria-label",enabled?"가이드 끄기":"가이드 켜기");
+}
+
+function getCurrentGuideType() {
+  if(!isFreeModeGuideAvailable())return null;
+  if(!$("#modal").classList.contains("hidden")&&$("#modalContent").querySelector(".atlas-tabs"))return "atlas";
+  if(!$("#worldMap").classList.contains("hidden"))return "district";
+  if(!$("#gameScreen").classList.contains("hidden")&&state.phase!==3)return "main";
+  return null;
+}
+
+function isGuideTargetAvailable(target) {
+  if(!target)return false;
+  const style=getComputedStyle(target);return style.display!=="none"&&style.visibility!=="hidden";
+}
+
+function positionActiveGuide() {
+  if(!activeGuide)return;
+  const target=activeGuide.target;if(!target?.isConnected||!isGuideTargetAvailable(target)){stopGuide({complete:false});return;}
+  const focus=$("#guideFocus"),card=$("#guideCard"),rect=target.getBoundingClientRect(),padding=8,gap=18,viewportWidth=window.innerWidth,viewportHeight=window.innerHeight;
+  const focusLeft=Math.max(8,rect.left-padding),focusTop=Math.max(8,rect.top-padding),focusRight=Math.min(viewportWidth-8,rect.right+padding),focusBottom=Math.min(viewportHeight-8,rect.bottom+padding);
+  Object.assign(focus.style,{left:`${focusLeft}px`,top:`${focusTop}px`,width:`${Math.max(0,focusRight-focusLeft)}px`,height:`${Math.max(0,focusBottom-focusTop)}px`});
+  const cardRect=card.getBoundingClientRect(),cardWidth=Math.min(cardRect.width,viewportWidth-24),cardHeight=cardRect.height;
+  let left,top;
+  if(focusRight+gap+cardWidth<=viewportWidth-12){left=focusRight+gap;top=focusTop;}
+  else if(focusLeft-gap-cardWidth>=12){left=focusLeft-gap-cardWidth;top=focusTop;}
+  else{left=Math.max(12,(viewportWidth-cardWidth)/2);top=focusBottom+gap+cardHeight<=viewportHeight-12?focusBottom+gap:focusTop-gap-cardHeight;}
+  left=Math.max(12,Math.min(left,viewportWidth-cardWidth-12));top=Math.max(12,Math.min(top,viewportHeight-cardHeight-12));
+  Object.assign(card.style,{left:`${left}px`,top:`${top}px`,width:`${cardWidth}px`});
+}
+
+function renderGuideStep() {
+  if(!activeGuide)return;
+  const step=activeGuide.steps[activeGuide.index],target=document.querySelector(step.target);
+  if(!isGuideTargetAvailable(target)){activeGuide.index+=1;if(activeGuide.index>=activeGuide.steps.length){stopGuide({complete:true});return;}renderGuideStep();return;}
+  activeGuide.target=target;
+  $("#guideSection").textContent=`FREE MODE GUIDE · ${activeGuide.definition.label}`;
+  $("#guideStep").textContent=`${activeGuide.index+1} / ${activeGuide.steps.length}`;
+  $("#guideTitle").textContent=step.title;$("#guideDescription").textContent=step.description;
+  $("#guideConfirmButton").textContent=activeGuide.index===activeGuide.steps.length-1?"확인 · 가이드 완료":"확인 · 다음";
+  target.scrollIntoView({block:"center",inline:"nearest",behavior:"auto"});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{positionActiveGuide();$("#guideConfirmButton").focus();}));
+}
+
+function startGuide(type,{manual=false,onFinish=null}={}) {
+  const definition=FREE_MODE_GUIDES[type],settings=ensureGuideSettings();
+  if(!definition||!isFreeModeGuideAvailable()||!settings?.guideEnabled)return false;
+  if(!manual&&(state.day!==1||settings.guideCompleted[type]))return false;
+  if(activeGuide)stopGuide({complete:false,runContinuation:false});
+  const steps=definition.steps.filter(step=>isGuideTargetAvailable(document.querySelector(step.target)));if(!steps.length)return false;
+  activeGuide={type,definition,steps,index:0,target:null,onFinish};
+  document.body.classList.add("guide-running");$("#guideOverlay").classList.remove("hidden");renderGuideStep();return true;
+}
+
+function stopGuide({complete=false,runContinuation=true}={}) {
+  if(!activeGuide)return;
+  const finished=activeGuide;activeGuide=null;
+  if(complete&&state){ensureGuideSettings().guideCompleted[finished.type]=true;SaveManager.save(state);}
+  $("#guideOverlay").classList.add("hidden");$("#guideFocus").removeAttribute("style");$("#guideCard").removeAttribute("style");document.body.classList.remove("guide-running");
+  if(runContinuation)finished.onFinish?.();
+}
+
+function advanceGuide() {
+  if(!activeGuide)return;activeGuide.index+=1;
+  if(activeGuide.index>=activeGuide.steps.length){stopGuide({complete:true});return;}
+  renderGuideStep();
+}
+
+function toggleGuide() {
+  if(!isFreeModeGuideAvailable())return;
+  const settings=ensureGuideSettings();settings.guideEnabled=!settings.guideEnabled;
+  if(!settings.guideEnabled)stopGuide({complete:false});
+  SaveManager.save(state);renderGuideToggle();
+  if(settings.guideEnabled){const type=getCurrentGuideType();if(type)setTimeout(()=>startGuide(type,{manual:true}),0);}
+}
+
+function maybeStartCurrentGuide() { const type=getCurrentGuideType();return type?startGuide(type):false; }
+
 if (!SaveManager.hasSave()) $("#loadButton").classList.add("hidden");
 renderSoundButton();
 $("#soundButton").addEventListener("click",()=>{const enabled=sound.toggle();renderSoundButton();if(enabled){sound.play("success");if(state)sound.playScene(phases[state.phase].key,state.day);else sound.playBgm("title",new Date().getDate());}toast(enabled?"효과음과 BGM을 켰어요.":"모든 소리를 껐어요.");});
+$("#guideToggleButton").addEventListener("click",toggleGuide);
+$("#guideConfirmButton").addEventListener("click",advanceGuide);
 $("#debugButton").addEventListener("click",openDebug);
 $("#tipToolsButton").addEventListener("click",()=>openGameTools());
 $("#gameToolsClose").addEventListener("click",closeGameTools);
@@ -1785,4 +1912,6 @@ $("#introGameStartButton").addEventListener("click",finishOnboarding);
 document.addEventListener("keydown", handleModalKeydown);
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!$("#gameToolsLayer").classList.contains("hidden"))closeGameTools();});
 document.addEventListener("fullscreenchange",renderFullscreenButtons);
+window.addEventListener("resize",()=>{if(activeGuide)requestAnimationFrame(positionActiveGuide);});
+document.addEventListener("scroll",()=>{if(activeGuide)requestAnimationFrame(positionActiveGuide);},true);
 window.addEventListener("beforeunload",()=>clearInterval(runtimeWatchdogTimer));

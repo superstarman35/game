@@ -4,11 +4,11 @@ export const LOTTERY_TICKET_PRICE = 5000;
 export const DAILY_TICKET_LIMIT = 3;
 
 export const LOTTERY_PRIZES = [
-  { id:"first", label:"1등", threshold:0.001, prize:10000000 },
-  { id:"second", label:"2등", threshold:0.01, prize:5000000 },
-  { id:"third", label:"3등", threshold:0.05, prize:500000 },
-  { id:"fourth", label:"4등", threshold:0.15, prize:50000 },
-  { id:"fifth", label:"5등", threshold:0.38, prize:5000 },
+  { id:"first", label:"1등", threshold:0.0005, prize:10000000 },
+  { id:"second", label:"2등", threshold:0.0055, prize:5000000 },
+  { id:"third", label:"3등", threshold:0.0255, prize:500000 },
+  { id:"fourth", label:"4등", threshold:0.1155, prize:50000 },
+  { id:"fifth", label:"5등", threshold:0.3355, prize:5000 },
   { id:"miss", label:"꽝", threshold:1, prize:0 }
 ];
 

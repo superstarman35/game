@@ -3,6 +3,12 @@ import { getEquippedHeroineOutfit } from "../heroine-data.mjs";
 import { getYunaExpressionAsset, getYunaOutfitAsset } from "../yuna-data.mjs";
 import { getGirlfriendVisualAsset } from "../girlfriend-visual-data.mjs";
 
+const HAEUN_EVENT_VIDEO="assets/characters/girlfriend-standing-2d_transparent.webm?v=5";
+
+export function getHeroineEventVideo(heroineId,characterId,sceneType){
+  return heroineId==="haeun"&&characterId==="girlfriend"&&["event","temptation"].includes(sceneType)?HAEUN_EVENT_VIDEO:"";
+}
+
 export function resolveCharacterExpression(state) {
   if (state.conflict >= 55 || state.trust < 320) return { tone:"tense", icon:"…", label:"긴장한 눈빛" };
   if (state.stress >= 72) return { tone:"worried", icon:"?", label:"걱정스러운 표정" };

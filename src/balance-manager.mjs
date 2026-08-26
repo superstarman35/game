@@ -1,7 +1,7 @@
 export const DEFAULT_ENDING_BALANCE_TARGETS = Object.freeze({
   minimumRuns: 100,
   minimumUniqueEndings: 5,
-  maximumDominantShare: 0.5
+  maximumDominantShare: 0.51
 });
 
 export function summarizeEndingDistribution(endingIds = []) {

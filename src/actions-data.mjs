@@ -33,7 +33,7 @@ export const ACTIONS = {
     { id:"night-call", icon:"♥", title:"통화하며 하루 마무리", desc:"오늘 있었던 일을 솔직하게 나눈다.", costLabel:"시간 1", timeCost:1, effects:{ affection:20, trust:18, energy:-5 }, tag:"연락" },
     { id:"short-message", icon:"📱", title:"짧게 메시지만", desc:"바쁘다는 핑계로 간단한 인사만 남긴다.", costLabel:"시간 0", timeCost:0, effects:{ affection:3, trust:1 }, tag:"연락" },
     { id:"online-shopping", icon:"🛒", title:"온라인 쇼핑", desc:"새 옷으로 패션과 기분을 챙긴다.", costLabel:"₩55,000", timeCost:1, itemId:"linen-shirt", itemOwner:"player", requirements:[{ stat:"money", operator:">=", value:55000, message:"자산 ₩55,000 이상 필요" }], effects:{ money:-55000, charm:8, fashion:8, confidence:4, stress:-5 }, tag:"쇼핑" },
-    { id:"early-sleep", icon:"💤", title:"일찍 잠들기", desc:"내일을 위해 충분히 휴식한다.", costLabel:"시간 1", timeCost:1, effects:{ energy:20, health:5, fatigue:-18, stress:-8, affection:-5 }, tag:"휴식" }
+    { id:"early-sleep", icon:"💤", title:"일찍 잠들기", desc:"내일을 위해 충분히 휴식한다.", costLabel:"시간 1", timeCost:1, effects:{ energy:5, health:2, fatigue:-8, stress:-3 }, tag:"휴식" }
   ]
 };
 

@@ -1,6 +1,21 @@
 const POSITIVE_PATTERN = /고마|좋아|충분|기억|믿|함께|안심|재밌|행복/;
 const NEGATIVE_PATTERN = /화나|무서|부담|서운|의심|답답|거짓말|미안/;
 
+export function resolveInitialScenePresentation(presentation={},sequence=[]){
+  const characterStep=sequence.find(step=>step?.characterId);
+  const backgroundStep=sequence.find(step=>step?.backgroundId);
+  return {
+    ...presentation,
+    characterId:characterStep?.characterId??presentation.characterId,
+    expressionId:characterStep?.expressionId??presentation.expressionId,
+    poseId:characterStep?.poseId??presentation.poseId,
+    outfitId:characterStep?.outfitId??presentation.outfitId,
+    backgroundId:backgroundStep?.backgroundId??presentation.backgroundId,
+    weather:backgroundStep?.weather??presentation.weather,
+    timeOfDay:backgroundStep?.timeOfDay??presentation.timeOfDay
+  };
+}
+
 export function inferReactionExpression(text = "") {
   if (NEGATIVE_PATTERN.test(text)) return "tense";
   if (/걱정|아쉬|시간|침묵|천천히/.test(text)) return "worried";

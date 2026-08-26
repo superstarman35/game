@@ -21,9 +21,9 @@ import { applyNpcActionEffects, getNpcRelationshipStatus, isYujinSecretGirlfrien
 import { getTemptationOpportunity, resolveTemptation, TEMPTATION_CHOICES } from "./src/temptation-manager.mjs?v=2";
 import { applyRivalPressure, calculateRivalRisk } from "./src/rival-manager.mjs";
 import { calculateBreakupRisk, evaluateBreakup } from "./src/conflict-manager.mjs";
-import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=12";
-import { requestGirlfriendReply } from "./src/ai-chat-client.mjs?v=4";
-import { HAEUN_MESSAGE_CORPUS } from "./src/haeun-message-data.mjs?v=3";
+import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=13";
+import { requestGirlfriendReply } from "./src/ai-chat-client.mjs?v=5";
+import { HAEUN_MESSAGE_CORPUS } from "./src/haeun-message-data.mjs?v=4";
 import { applyGirlfriendLoan } from "./src/girlfriend-loan-manager.mjs?v=1";
 import { advanceStockMarket, buyStock, getPortfolioSummary, sellStock } from "./src/investment-manager.mjs?v=2";
 import { buyInstantLottery, DAILY_TICKET_LIMIT, getLotterySummary, LOTTERY_TICKET_PRICE } from "./src/lottery-manager.mjs?v=3";
@@ -1478,12 +1478,12 @@ function dailyEvent(completedDay) { if(completedDay%5===0){ const good=Math.rand
 function openChat(mode="message") {
   if(!["message","call"].includes(mode))mode="message";
   const context=buildConversationContext(state),greeting=getContextualOpening(context).replace(`${state.partner.name}: `,"");
-  activeConversation={mode,turn:0,topic:"opening",lastQuestionId:inferConversationQuestion(greeting),lastUserMessage:null,recentReplyIds:[],variantSeed:(state.day+state.phase+state.conversationHistory.length)%7,messages:[{speaker:"her",text:greeting}],effects:{},hostile:false};
+  activeConversation={mode,turn:0,topic:"opening",lastQuestionId:inferConversationQuestion(greeting),lastUserMessage:null,recentReplyIds:[],recentFollowUpIds:[],variantSeed:(state.day+state.phase+state.conversationHistory.length)%7,messages:[{speaker:"her",text:greeting}],effects:{},hostile:false};
   renderConversationSession();openModal();
 }
 function renderConversationSession(){
   if(!activeConversation)return;const session=activeConversation,context=buildConversationContext(state),suggestions=getSuggestedConversationReplies(context,session.turn);
-  const conversationGuide=session.mode==='call'?'목소리를 들으며 천천히 이야기해 보세요.':state.partner.heroineId==='haeun'?`하은 전용 상황별 메시지 ${HAEUN_MESSAGE_CORPUS.length.toLocaleString('ko-KR')}개가 입력 내용에 맞춰 답합니다.`:'서로를 존중하는 말로 마음을 이어 가세요.';
+  const conversationGuide=session.mode==='call'?'목소리를 들으며 천천히 이야기해 보세요.':state.partner.heroineId==='haeun'?`하은 전용 메시지 ${HAEUN_MESSAGE_CORPUS.length.toLocaleString('ko-KR')}개를 바탕으로 최근 대화와 감정 상태를 기억해 답합니다.`:'서로를 존중하는 말로 마음을 이어 가세요.';
   const waiting=session.replyPending?`<div class="message her reply-waiting" aria-label="${escapeHtml(state.partner.name)} 답장 작성 중"><i></i><i></i><i></i><small>${session.mode==='call'?'잠시 생각 중':'답장 작성 중'}</small></div>`:"";
   const messages=session.messages.map(item=>`<div class="message ${item.speaker}">${escapeHtml(item.text)}</div>`).join("")+waiting;
   $("#modalContent").innerHTML=`<section class="conversation-session ${session.mode==='call'?'phone-conversation':''}"><span class="eyebrow">${session.mode==='call'?'PHONE CALL':'MESSAGES'} · ${escapeHtml(state.partner.name)}</span><div class="conversation-heading"><div class="conversation-avatar"><img src="${state.partner.referenceImage}" alt=""><i>${session.mode==='call'?'☎':'●'}</i></div><div><h2>${session.mode==='call'?`${state.partner.name}와 통화 중`:`${state.partner.name}에게 메시지`}</h2><p>${escapeHtml(conversationGuide)}</p></div></div><div id="chatMessages" class="chat-window" aria-live="polite">${messages}</div><div id="chatSafetyNotice" class="chat-safety-notice" hidden></div><div class="chat-suggestions">${suggestions.map(text=>`<button type="button" data-chat-suggestion="${escapeHtml(text)}" ${session.replyPending?'disabled':''}>${escapeHtml(text)}</button>`).join("")}</div><form id="chatForm" class="chat-compose"><input id="chatInput" maxlength="180" autocomplete="off" placeholder="${session.replyPending?'답장을 기다리고 있어요…':'직접 입력하거나 추천 답변을 선택하세요'}" required ${session.replyPending?'disabled':''}><button type="submit" ${session.replyPending?'disabled':''}>보내기</button></form><button id="finishConversation" class="conversation-finish" type="button" ${session.replyPending?'disabled':''}>${session.mode==='call'?'통화 종료':'대화 마치기'}</button></section>`;
@@ -1501,7 +1501,7 @@ async function chatReply(message){
   if(analysis.level==="hostile"){
     response={...getHostileConversationResponse(state),source:"safety"};await replyDelay;state.conversationSafety??={hostileCount:0,lastHostileDay:null};state.conversationSafety.hostileCount=response.count;state.conversationSafety.lastHostileDay=state.day;session.hostile=true;
   }else{
-    const endpoint=document.querySelector('meta[name="today-day-one-ai-endpoint"]')?.content;[response]=await Promise.all([requestGirlfriendReply({endpoint,context:{...buildConversationContext(state),sessionTurn:session.turn,mode:session.mode,sessionState:{topic:session.topic,lastQuestionId:session.lastQuestionId,lastUserMessage:session.lastUserMessage,recentReplyIds:[...session.recentReplyIds],turn:session.turn,variantSeed:session.variantSeed}},message}),replyDelay]);
+    const endpoint=document.querySelector('meta[name="today-day-one-ai-endpoint"]')?.content;[response]=await Promise.all([requestGirlfriendReply({endpoint,context:{...buildConversationContext(state),sessionTurn:session.turn,mode:session.mode,sessionState:{topic:session.topic,lastQuestionId:session.lastQuestionId,lastUserMessage:session.lastUserMessage,recentReplyIds:[...session.recentReplyIds],recentFollowUpIds:[...session.recentFollowUpIds],turn:session.turn,variantSeed:session.variantSeed}},message}),replyDelay]);
   }
   if(activeConversation!==session)return;
   session.replyPending=false;
@@ -1515,8 +1515,8 @@ async function chatReply(message){
   const scale=session.turn>=7?0:session.turn>=4?.5:1,effects=Object.fromEntries(Object.entries(response.effects??{}).map(([key,value])=>[key,Math.round(value*(analysis.level==="hostile"?1:scale))]));
   for(const [key,value] of Object.entries(effects))session.effects[key]=(session.effects[key]??0)+value;
   session.messages.push({speaker:"her",text:response.text});session.turn+=1;
-  session.lastUserMessage=message;session.topic=response.topic??session.topic;session.lastQuestionId=inferConversationQuestion(response.text);const replyId=response.replyId??response.id;if(replyId){session.recentReplyIds.push(replyId);session.recentReplyIds=session.recentReplyIds.slice(-12);}
-  recordConversationTurn(state,message,response.text,{mode:session.mode,tone:analysis.level});
+  session.lastUserMessage=message;session.topic=response.topic??session.topic;session.lastQuestionId=inferConversationQuestion(response.text);const replyId=response.replyId??response.id;if(replyId){session.recentReplyIds.push(replyId);session.recentReplyIds=session.recentReplyIds.slice(-12);}if(response.followUpId){session.recentFollowUpIds.push(response.followUpId);session.recentFollowUpIds=session.recentFollowUpIds.slice(-12);}
+  recordConversationTurn(state,message,response.text,{mode:session.mode,tone:analysis.level,topic:response.topic??session.topic,questionId:response.followUpId??session.lastQuestionId,replyId,emotion:response.emotion??null});
   state.logs.push({time:`DAY ${state.day} · ${session.mode==='call'?'CALL':'MESSAGE'}`,text:analysis.level==='hostile'?`${state.partner.name}에게 공격적인 말을 해 관계가 크게 나빠졌다.`:`${state.partner.name}와 대화 · ${message.slice(0,32)}`});
   SaveManager.save(state);
   if(response.forceEnd||session.turn>=10){finishConversation(response.forceEnd?"상대가 상처를 받아 대화를 종료했습니다.":"오늘 나눌 이야기를 충분히 나누었습니다.");return;}renderConversationSession();

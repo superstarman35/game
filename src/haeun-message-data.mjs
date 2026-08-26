@@ -414,6 +414,72 @@ export function classifyHaeunMessage(message,session={}){
   return HAEUN_MESSAGE_TOPICS.find(definition=>definition.patterns.some(pattern=>pattern.test(value)))?.id??"general";
 }
 
+export function deriveHaeunDialogueState(context,message=""){
+  const relationship=context?.relationship??{},player=context?.player??{};
+  const affection=Number(relationship.affection)||0,trust=Number(relationship.trust)||0,conflict=Number(relationship.conflict)||0,relationshipStress=Number(relationship.stress)||0;
+  const fatigue=Number(player.fatigue)||0,stress=Number(player.stress)||0,text=normalize(message);
+  if(conflict>=45||trust<350)return {emotion:/미안|사과|잘못/.test(text)?"softening":"guarded",willingness:"low",relationshipTone:"distant"};
+  if(fatigue>=75||stress>=75||relationshipStress>=65)return {emotion:"tired",willingness:"medium",relationshipTone:trust>=550?"caring":"careful"};
+  if(affection>=700&&trust>=600)return {emotion:"warm",willingness:"high",relationshipTone:"close"};
+  if(/사랑|좋아해|고마|보고\s*싶/.test(text))return {emotion:"touched",willingness:"high",relationshipTone:"affectionate"};
+  return {emotion:"calm",willingness:"medium",relationshipTone:"steady"};
+}
+
+function historicalTopic(turn){
+  if(turn?.topic&&HAEUN_MESSAGE_TOPICS.some(item=>item.id===turn.topic))return turn.topic;
+  const value=normalize(turn?.user);
+  return HAEUN_MESSAGE_TOPICS.find(definition=>definition.patterns.some(pattern=>pattern.test(value)))?.id??"general";
+}
+
+const MEMORY_KEYWORD_GROUPS=Object.freeze([
+  /회사|직장|업무|발표|회의|상사|프로젝트|출근|퇴근/,
+  /데이트|만나|약속|산책|영화/,
+  /가족|부모|엄마|아빠|형제|동생/,
+  /친구|동료|선배|후배|모임|회식/,
+  /돈|월급|지출|저축|투자|카드|대출/,
+  /병원|감기|두통|건강|약|통증|아파/,
+  /잠|수면|꿈|불면|밤새/,
+  /밥|식사|점심|저녁|아침|메뉴|야식/
+]);
+
+function sharesMemoryKeyword(previous,current){return MEMORY_KEYWORD_GROUPS.some(pattern=>pattern.test(previous)&&pattern.test(current));}
+
+export function findHaeunRelevantMemory(context,topicId,message=""){
+  const current=normalize(message),history=[...(context?.recentConversation??[])].reverse();
+  for(let index=0;index<history.length;index+=1){
+    const turn=history[index],user=String(turn?.user??"").replace(/\s+/g," ").trim();
+    const previous=normalize(user),related=historicalTopic(turn)===topicId||sharesMemoryKeyword(previous,current);
+    if(user.length<4||previous===current||!related)continue;
+    return {id:`conversation-${turn.day??0}-${index}`,source:"conversation",summary:user.slice(0,36)};
+  }
+  return null;
+}
+
+function chooseContextualFollowUp(context,topicId,seed){
+  const group=TOPIC_GROUPS[topicId]??"casual",items=FOLLOW_UP_GROUPS[group]??CASUAL_FOLLOW_UPS;
+  const recentIds=new Set(context?.sessionState?.recentFollowUpIds??[]),recentText=(context?.recentConversation??[]).map(turn=>String(turn?.assistant??""));
+  const candidates=items.map((text,index)=>({id:`haeun-followup-${group}-${index+1}`,text}));
+  const available=candidates.filter(item=>!recentIds.has(item.id)&&!recentText.some(text=>text.includes(item.text)));
+  const pool=available.length?available:candidates;
+  return pool[seed%pool.length];
+}
+
+const REPEATED_MESSAGE_REPLIES=Object.freeze([
+  "응, 그 말은 들었어. 같은 말을 다시 한 이유가 있으면 조금 다르게 설명해 줄래?",
+  "아까도 같은 이야기를 했지. 내가 놓친 마음이 있다면 이번에는 그 부분을 말해 줘.",
+  "그 말이 계속 마음에 남아 있나 봐. 같은 문장보다 지금 원하는 반응을 알려 줬으면 해."
+]);
+
+function buildContextualHaeunReply(context,message,definition,seed){
+  const dialogueState=deriveHaeunDialogueState(context,message),memory=findHaeunRelevantMemory(context,definition.id,message),followUp=chooseContextualFollowUp(context,definition.id,seed);
+  const response=render(definition.responses[seed%definition.responses.length],context),continuation=render(definition.continuations[Math.floor(seed/definition.responses.length)%definition.continuations.length],context);
+  const stateLine=dialogueState.emotion==="guarded"?"솔직히 지금은 마음을 다 열고 답하기는 어려워.":dialogueState.emotion==="tired"?"오늘은 조금 지쳐 있어서 천천히 이야기하고 싶어.":dialogueState.emotion==="softening"?"아직 서운함은 남아 있지만 네 말을 들어 볼게.":"";
+  const memoryLine=memory?`전에 네가 “${memory.summary}”라고 했던 것도 기억하고 있어.`:"";
+  const includeContinuation=normalize(message).length>=12||seed%2===0;
+  const text=[stateLine,response,memoryLine,includeContinuation?continuation:"",followUp.text].filter(Boolean).join(" ");
+  return {text,effects:{...definition.effects},source:"haeun-contextual",style:"full",emotion:dialogueState.emotion,willingness:dialogueState.willingness,followUpId:followUp.id,memoryUsed:Boolean(memory),memoryId:memory?.id??null};
+}
+
 export function getHaeunMessageReply(context,message){
   const relationshipSeed=Math.round((Number(context?.relationship?.affection)||0)+(Number(context?.relationship?.trust)||0));
   const seed=hash(`${normalize(message)}|${context?.day??0}|${context?.phase??0}|${context?.sessionState?.turn??0}|${context?.sessionState?.variantSeed??0}|${relationshipSeed}`),topicId=classifyHaeunMessage(message,context?.sessionState);
@@ -426,9 +492,17 @@ export function getHaeunMessageReply(context,message){
     const recent=new Set(context?.sessionState?.recentReplyIds??[]),items=HAEUN_REFUSAL_REPLIES.map((text,index)=>({id:`haeun-boundary-${index+1}`,text})),available=items.filter(item=>!recent.has(item.id)),pool=available.length?available:items,record=pool[seed%pool.length];
     return {id:record.id,replyId:record.id,topic:"boundary",text:record.text,effects:{affection:-1,trust:-2,conflict:1,relationshipStress:2},source:"haeun-boundary",style:"short"};
   }
+  if(context?.sessionState?.lastUserMessage&&normalize(context.sessionState.lastUserMessage)===normalize(message)){
+    const recent=new Set(context?.sessionState?.recentReplyIds??[]),items=REPEATED_MESSAGE_REPLIES.map((text,index)=>({id:`haeun-repeat-${index+1}`,text})),available=items.filter(item=>!recent.has(item.id)),pool=available.length?available:items,record=pool[seed%pool.length],dialogueState=deriveHaeunDialogueState(context,message);
+    return {id:record.id,replyId:record.id,topic:topicId,text:record.text,effects:{trust:1},source:"haeun-context-repeat",style:"short",emotion:dialogueState.emotion,willingness:dialogueState.willingness,followUpId:null,memoryUsed:false};
+  }
   const definition=HAEUN_MESSAGE_TOPICS.find(item=>item.id===topicId)??HAEUN_MESSAGE_TOPICS.at(-1),all=HAEUN_MESSAGE_CORPUS.filter(item=>item.topicId===definition.id),recent=new Set(context?.sessionState?.recentReplyIds??[]);
-  const preferShort=normalize(message).length<=10||seed%3===0,styled=all.filter(item=>item.style===(preferShort?"short":"full")),available=styled.filter(item=>!recent.has(item.id)),pool=available.length?available:styled,record=pool[seed%pool.length];
-  return {id:record.id,replyId:record.id,topic:definition.id,text:render(record.text,context),effects:{...record.effects},source:"haeun-corpus",style:record.style};
+  if(normalize(message).length<=3){
+    const styled=all.filter(item=>item.style==="short"),available=styled.filter(item=>!recent.has(item.id)),pool=available.length?available:styled,record=pool[seed%pool.length],dialogueState=deriveHaeunDialogueState(context,message);
+    return {id:record.id,replyId:record.id,topic:definition.id,text:render(record.text,context),effects:{...record.effects},source:"haeun-contextual",style:"short",emotion:dialogueState.emotion,willingness:dialogueState.willingness,followUpId:null,memoryUsed:false};
+  }
+  const contextualSeed=(seed+recent.size*104729)>>>0,contextual=buildContextualHaeunReply(context,message,definition,contextualSeed),id=`haeun-context-${definition.id}-${contextualSeed}`;
+  return {id,replyId:id,topic:definition.id,...contextual};
 }
 
 export function validateHaeunMessageCorpus(corpus=HAEUN_MESSAGE_CORPUS){

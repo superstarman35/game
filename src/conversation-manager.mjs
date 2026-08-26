@@ -1,6 +1,6 @@
 import { getMemoryContext } from "./memory-manager.mjs";
 import { getItem } from "./items-data.mjs";
-import { getHaeunMessageReply } from "./haeun-message-data.mjs?v=3";
+import { getHaeunMessageReply } from "./haeun-message-data.mjs?v=4";
 
 export function buildConversationContext(state) {
   const recentActions = (state.actionHistory ?? []).slice(-6).map(entry => ({ day:entry.day, actionId:entry.actionId, tag:entry.tag }));
@@ -11,7 +11,11 @@ export function buildConversationContext(state) {
     day:turn.day,
     phase:turn.phase,
     user:String(turn.user ?? "").slice(0, 120),
-    assistant:String(turn.assistant ?? "").slice(0, 180)
+    assistant:String(turn.assistant ?? "").slice(0, 360),
+    topic:turn.topic??null,
+    questionId:turn.questionId??null,
+    replyId:turn.replyId??null,
+    emotion:turn.emotion??null
   }));
   const wornInstance=(state.inventory ?? []).find(entry=>entry.owner === "girlfriend" && entry.equipped && getItem(entry.itemId)?.category === "heroine-outfit");
   const wornOutfit=wornInstance ? getItem(wornInstance.itemId) : null;
@@ -111,7 +115,7 @@ export function generateContextualReply(context, message) {
 
 export function recordConversationTurn(state, userMessage, assistantMessage,details={}) {
   state.conversationHistory ??= [];
-  const turn = { day:state.day, phase:state.phase, user:String(userMessage), assistant:String(assistantMessage),mode:details.mode??"message",tone:details.tone??"safe" };
+  const turn = { day:state.day, phase:state.phase, user:String(userMessage), assistant:String(assistantMessage),mode:details.mode??"message",tone:details.tone??"safe",topic:details.topic??null,questionId:details.questionId??null,replyId:details.replyId??null,emotion:details.emotion??null };
   state.conversationHistory.push(turn);
   if (state.conversationHistory.length > 40) state.conversationHistory.splice(0, state.conversationHistory.length - 40);
   return turn;

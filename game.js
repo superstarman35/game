@@ -8,7 +8,7 @@ import { EventRuntimeManager } from "./src/event-runtime-manager.mjs?v=4";
 import { getMicroEventDiagnostics, rollMicroEvents } from "./src/micro-event-manager.mjs?v=5";
 import { auditEventSystems } from "./src/event-audit.mjs?v=4";
 import { EVENT_DEFINITIONS } from "./src/events-data.mjs?v=5";
-import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=16";
+import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=17";
 import { getActionAvailability, getWeekdayName, isActionVisible, isWeekend } from "./src/action-manager.mjs?v=5";
 import { calculateActionEffects } from "./src/consequence-manager.mjs?v=2";
 import { getRelationshipState } from "./src/relationship-manager.mjs";
@@ -1350,7 +1350,7 @@ function openAlbumVideoLayer(entry){if(!entry)return;closeAlbumVideoLayer();cons
 function openNightPc() {
   const workButton=isWeekend(state.day)?"":`<button data-pc-action="work">💼 야간 업무<small>수입 증가 · 스트레스 증가</small></button>`;
   $("#modalContent").innerHTML=`<span class="eyebrow">MY COMPUTER · 60 MIN</span><h2>컴퓨터로 무엇을 할까?</h2><div class="pc-actions"><button data-pc-action="game">🎮 게임하기<small>스트레스 완화 · 피로 증가</small></button><button data-pc-action="study">📚 자기계발<small>업무 능력 증가 · 피로 증가</small></button>${workButton}</div>`;openModal();
-  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-3,fatigue:5,energy:-3}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:1,stress:7,fatigue:5,energy:-5,health:-5}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
+  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-3,fatigue:5,energy:-3}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:1,stress:7,fatigue:5,energy:-10,health:-5}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
 }
 
 function showNightPcResult(activity,result,startTime,changes) {

@@ -145,8 +145,8 @@ const PLAYER_JOB_ACTIONS = [
 PLAYER_JOB_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push({...action,weekdayOnly:true}));
 
 const ARCHETYPE_ACTIONS = [
-  ["evening",{id:"handsome-meet-friends",icon:"🧑‍🤝‍🧑",title:"친구들 만나기",desc:"오랜 친구들과 편하게 어울리며 기분을 푼다.",costLabel:"사회성 +1 · 스트레스 -3",timeCost:1,archetypeIds:["handsome"],effects:{social:1,stress:-3,confidence:1},tag:"외모 특전"}],
-  ["evening",{id:"handsome-meet-female-friends",icon:"✨",title:"여자 사람 친구들 만나기",desc:"호감을 보이는 여자 사람 친구들과 어울린다. 연인의 신뢰가 흔들릴 수 있다.",costLabel:"신뢰 -24 · 호감 -24 · 갈등 +10",timeCost:1,archetypeIds:["handsome"],effects:{social:1,confidence:1,trust:-24,affection:-24,conflict:10},tag:"유혹"}],
+  ["evening",{id:"handsome-meet-friends",icon:"🧑‍🤝‍🧑",title:"친구들 만나기",desc:"오랜 친구들과 편하게 어울리며 기분을 푼다.",costLabel:"₩80,000 · 사회성 +1",timeCost:1,archetypeIds:["handsome"],requirements:[{stat:"money",operator:">=",value:80000,message:"자산 ₩80,000 이상 필요"}],effects:{money:-80000,social:1,stress:-3,confidence:1},tag:"외모 특전"}],
+  ["evening",{id:"handsome-meet-female-friends",icon:"✨",title:"여자 사람 친구들 만나기",desc:"호감을 보이는 여자 사람 친구들과 어울린다. 연인의 신뢰가 흔들릴 수 있다.",costLabel:"₩160,000 · 신뢰 -24 · 호감 -24",timeCost:1,archetypeIds:["handsome"],requirements:[{stat:"money",operator:">=",value:160000,message:"자산 ₩160,000 이상 필요"}],effects:{money:-160000,social:1,confidence:1,trust:-24,affection:-24,conflict:10},tag:"유혹"}],
   ["evening",{id:"wealthy-social-club",icon:"🥂",title:"프라이빗 사교 모임 가기",desc:"사업가와 투자자가 모이는 비공개 모임에서 인맥을 만든다.",costLabel:"₩180,000",timeCost:1,archetypeIds:["wealthy"],requirements:[{stat:"money",operator:">=",value:180000,message:"자산 ₩180,000 이상 필요"}],effects:{money:-180000,social:18,work:7,confidence:8},tag:"부자 특전"}],
   ["evening",{id:"wealthy-spend-relief",icon:"💎",title:"호화롭게 돈 쓰기",desc:"좋은 음식과 서비스를 마음껏 즐기며 스트레스를 푼다.",costLabel:"₩300,000 · 스트레스 -30",timeCost:1,archetypeIds:["wealthy"],requirements:[{stat:"money",operator:">=",value:300000,message:"자산 ₩300,000 이상 필요"}],effects:{money:-300000,stress:-30,fatigue:-8,confidence:8},tag:"부자 특전"}]
 ];
@@ -154,7 +154,14 @@ ARCHETYPE_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push(action));
 ACTIONS.day.push({id:"yuna-library-study",icon:"📚",title:"유나와 도서관 공부",desc:"시험과 진로 이야기를 나누며 함께 문제를 푼다.",costLabel:"₩8,000",timeCost:1,heroineIds:["yuna"],requirements:[{stat:"money",operator:">=",value:8000,message:"자산 ₩8,000 이상 필요"}],effects:{money:-8000,affection:14,trust:14,stress:-4,energy:-4},tag:"데이트"});
 ACTIONS.evening.push({id:"yuna-after-school-snack",icon:"🍢",title:"유나와 방과 후 분식",desc:"분식집에서 오늘 학교에서 있었던 일을 듣는다.",costLabel:"₩16,000",timeCost:1,heroineIds:["yuna"],requirements:[{stat:"money",operator:">=",value:16000,message:"자산 ₩16,000 이상 필요"}],effects:{money:-16000,affection:20,trust:9,excitement:8,stress:-7},tag:"데이트"});
 
-for(const phase of PHASES)ACTIONS[phase.key]=ACTIONS[phase.key].map(action=>action.jobIds?.length?scalePlayerJobActionRewards(action):action);
+const EXTRA_WORK_ENERGY_COST_IDS = new Set(["overtime","job-multi-extra"]);
+
+export function applyActionEnergyCosts(action) {
+  const extraCost=(EXTRA_WORK_ENERGY_COST_IDS.has(action.id)?5:0)+(action.tag==="데이트"||action.autoGift===true?3:0);
+  return extraCost?{...action,effects:{...action.effects,energy:(Number(action.effects?.energy)||0)-extraCost}}:action;
+}
+
+for(const phase of PHASES)ACTIONS[phase.key]=ACTIONS[phase.key].map(action=>applyActionEnergyCosts(action.jobIds?.length?scalePlayerJobActionRewards(action):action));
 
 export function validateActionData(actions = ACTIONS, phases = PHASES) {
   const ids = new Set();

@@ -58,6 +58,7 @@ import { DEFAULT_GIRLFRIEND_VISUAL_ID, getGirlfriendVisual, getGirlfriendVisualA
 import { createWorldState, discoverLocation, getNearbyLocation, getPlayerHomeProfile, getRoadCells, isRoadCell, isWorldLocationOpen, migrateWorldState, moveWorldPlayer, PLAYER_HOME_PROFILES, selectWorldTransport, TRANSPORT_OPTIONS, travelToCity, validateWorldState, WORLD_ATLAS, WORLD_MAPS } from "../src/world-map-manager.mjs";
 import { GAME_MODES, getGameModeConfig, isContentAvailableForMode, validateScenarioState } from "../src/scenario-state.mjs";
 import { getMapLocationAsset, MAP_LOCATION_ASSETS, validateMapLocationAssets } from "../src/map-location-assets.mjs";
+import { getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, WORLD_REPEAT_ENCOUNTER_CHANCE } from "../src/world-encounter-manager.mjs";
 
 const coreActionResultAssetIds=["coworker-lunch","dinner-date","early-sleep","focused-work","lunch-date","manager-feedback","morning-contact","morning-gym","sleep-in","stock-check","temptation-secret"];
 assert.ok(coreActionResultAssetIds.every(actionId=>actionId in ACTION_RESULT_ASSETS));
@@ -243,6 +244,27 @@ assert.equal(rollLocationSituationEvent(yuriState,{id:"small-cafe",category:"caf
 yuriState.day=7;
 resolveSituationEventChoice(yuriState,yuriEvent,"accept");
 assert.equal(yuriState.npcs.find(npc=>npc.id==="player-ex").affection,yuriBefore+15);
+assert.equal(WORLD_REPEAT_ENCOUNTER_CHANCE,.5);
+assert.equal(hasCompletedYuriReunion(yuriState),true);
+assert.equal(rollRepeatWorldEncounter(yuriState,{id:"small-cafe",category:"cafe"},19*60,()=>.5001),null);
+const repeatYuri=rollRepeatWorldEncounter(yuriState,{id:"small-cafe",category:"cafe"},19*60,()=>.5);
+assert.equal(repeatYuri.npcId,"player-ex");
+const repeatYuriBefore=yuriState.npcs.find(npc=>npc.id==="player-ex").affection;
+const repeatYuriResult=resolveRepeatWorldEncounter(yuriState,repeatYuri,"greet");
+assert.equal(repeatYuriResult.npc.affection,repeatYuriBefore+5);
+assert.equal(yuriState.worldEncounterHistory.at(-1).locationId,"small-cafe");
+const beforeReunion=createInitialState(generateGirlfriend(()=>.5),()=>.5);beforeReunion.gameMode=GAME_MODES.FREE_ROMANCE;
+assert.equal(rollRepeatWorldEncounter(beforeReunion,{id:"small-cafe",category:"cafe"},19*60,()=>0),null);
+assert.equal(rollRepeatWorldEncounter(yuriState,{id:"night-food",category:"korean"},21*60+59,()=>0),null);
+const yujinEncounter=rollRepeatWorldEncounter(yuriState,{id:"night-food",category:"korean"},22*60,()=>.5);
+assert.equal(yujinEncounter.npcId,"female-coworker");
+const yujinBefore=yuriState.npcs.find(npc=>npc.id==="female-coworker").affection;
+assert.equal(resolveRepeatWorldEncounter(yuriState,yujinEncounter,"coworker-talk").npc.affection,yujinBefore+5);
+assert.equal(getNightOutingContext(19*60,"하은").message,"하은과 같이 외출 나왔다.");
+assert.equal(getNightOutingContext(19*60,"유리").message,"유리와 같이 외출 나왔다.");
+assert.equal(getNightOutingContext(22*60,"하은").message,"혼자 외출 나왔다.");
+assert.equal(shouldShowPartnerAtWorldLocation(21*60+59),true);
+assert.equal(shouldShowPartnerAtWorldLocation(22*60),false);
 assert.equal(richEventState.eventHistory.at(-1).status,"COMPLETED");
 assert.equal(richEventState.memories.at(-1).type,"situation-event");
 assert.equal(validateSituationEventState(richEventState),true);

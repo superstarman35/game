@@ -1,6 +1,6 @@
 import { validateGirlfriend } from "./girlfriend-manager.mjs?v=7";
 import { generateJob, getJobStartingState, validateJob } from "./jobs-data.mjs?v=6";
-import { generateNpcs, validateNpcs } from "./npc-manager.mjs?v=2";
+import { generateNpcs, validateNpcs } from "./npc-manager.mjs?v=3";
 import { validateMemories } from "./memory-manager.mjs";
 import { createInvestmentState, validateInvestmentState } from "./investment-manager.mjs?v=2";
 import { createLotteryState, validateLotteryState } from "./lottery-manager.mjs";

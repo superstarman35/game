@@ -1,5 +1,5 @@
-import { validateState } from "./game-core.mjs?v=14";
-import { migrateNpcRoster } from "./npc-manager.mjs?v=2";
+import { validateState } from "./game-core.mjs?v=15";
+import { migrateNpcRoster } from "./npc-manager.mjs?v=3";
 import { migrateHeroineProfile } from "./girlfriend-manager.mjs?v=6";
 import { migrateInvestmentState } from "./investment-manager.mjs?v=2";
 import { createLotteryState } from "./lottery-manager.mjs";

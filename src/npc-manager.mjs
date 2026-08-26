@@ -3,7 +3,8 @@ import { recordMemory } from "./memory-manager.mjs";
 
 const randomInt = (random, min, max) => min + Math.floor(random() * (max - min + 1));
 const ACTIVE_QUOTAS = { office:5, friend:3, rival:2, life:4 };
-const CORE_IDS = new Set(["female-coworker","team-lead","office-best-male","best-friend","male-rival","player-ex"]);
+export const FIXED_ACQUAINTANCE_NPC_IDS = Object.freeze(["male-rival","gym-trainer","drinking-friend"]);
+const CORE_IDS = new Set(["female-coworker","team-lead","office-best-male","best-friend","player-ex",...FIXED_ACQUAINTANCE_NPC_IDS]);
 
 function selectActiveIds(random) {
   const selected=new Set(CORE_IDS);
@@ -53,7 +54,7 @@ export function migrateNpcRoster(npcs, random = Math.random) {
       storyTags:[...character.storyTags],
       links:[...character.links],
       instanceId:previous.instanceId || character.instanceId,
-      active:["player-ex","office-best-male"].includes(character.id) ? true : typeof previous.active === "boolean" ? previous.active : true,
+      active:["player-ex","office-best-male"].includes(character.id)||FIXED_ACQUAINTANCE_NPC_IDS.includes(character.id)&&previous.storyState!=="haeun-boundary-closed" ? true : typeof previous.active === "boolean" ? previous.active : true,
       storyState:previous.storyState ?? "available"
     };
   });

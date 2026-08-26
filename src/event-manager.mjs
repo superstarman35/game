@@ -2,7 +2,8 @@ import { applyEffects } from "./game-core.mjs";
 import { appendTransaction } from "./economy-manager.mjs";
 import { EVENT_DEFINITIONS } from "./events-data.mjs";
 import { activateSituationEvent } from "./situation-event-manager.mjs";
-import { isContentAvailableForMode } from "./scenario-state.mjs";
+import { SITUATION_EVENTS } from "./situation-events-data.mjs";
+import { GAME_MODES, isContentAvailableForMode } from "./scenario-state.mjs";
 
 export const MAX_EVENTS_PER_DAY = 1;
 export const CATEGORY_COOLDOWN_DAYS = 3;
@@ -109,6 +110,14 @@ export function rollEvent(state, random = null, definitions = EVENT_DEFINITIONS)
   if (eventsToday >= MAX_EVENTS_PER_DAY) return null;
   const eligible=getEligibleEvents(state,definitions);const passing=eligible.filter(event=>(typeof random==="function"?random():getDirectorRoll(state,event.id))<=getEventProbability(state,event));if(!passing.length)return null;
   const recentNpcIds=new Set((state.eventHistory??[]).slice(-4).flatMap(record=>record.npcIds??[]));const ranked=passing.map(event=>{const diversity=(event.npcRequirements??[]).some(id=>recentNpcIds.has(id)) ? .72 : 1;return {event,score:(event.priority??50)*(event.baseWeight??50)*diversity};}).sort((a,b)=>b.score-a.score).slice(0,5);const chooser=typeof random==="function"?random():getDirectorRoll(state,`choice-${state.day}`);return triggerEvent(state,ranked[Math.min(ranked.length-1,Math.floor(chooser*ranked.length))].event);
+}
+
+export function getRuntimeEventDefinitions(state) {
+  return state?.gameMode === GAME_MODES.FREE_ROMANCE ? SITUATION_EVENTS : EVENT_DEFINITIONS;
+}
+
+export function rollRuntimeEvent(state, random = null) {
+  return rollEvent(state,random,getRuntimeEventDefinitions(state));
 }
 
 function getDirectorRoll(state,eventId){const seed=state.storyDirector?.nextDayPlan?.seed;if(!Number.isInteger(seed))return Math.random();let hash=seed>>>0;for(const char of `${state.day}:${eventId}`){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619);}return (hash>>>0)/4294967296;}

@@ -1,14 +1,14 @@
 import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=11";
 import { SaveManager } from "./src/save-manager.mjs?v=15";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
-import { getEventDiagnostics, rollEvent } from "./src/event-manager.mjs?v=8";
+import { getEventDiagnostics, getRuntimeEventDefinitions, rollRuntimeEvent } from "./src/event-manager.mjs?v=9";
 import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=7";
 import { resolveSituationEventChoice, rollLocationSituationEvent } from "./src/situation-event-manager.mjs?v=6";
 import { EventRuntimeManager } from "./src/event-runtime-manager.mjs?v=4";
 import { getMicroEventDiagnostics, rollMicroEvents } from "./src/micro-event-manager.mjs?v=5";
 import { auditEventSystems } from "./src/event-audit.mjs?v=4";
 import { EVENT_DEFINITIONS } from "./src/events-data.mjs?v=5";
-import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=12";
+import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=13";
 import { getActionAvailability, getWeekdayName, isActionVisible, isWeekend } from "./src/action-manager.mjs?v=5";
 import { calculateActionEffects } from "./src/consequence-manager.mjs?v=2";
 import { getRelationshipState } from "./src/relationship-manager.mjs";
@@ -36,13 +36,13 @@ import { maybeGenerateInitiatedMessage } from "./src/initiated-message-manager.m
 import { getWrappedFocusIndex } from "./src/ui-manager.mjs";
 import { getHeroineEventVideo, renderCharacter, resolveCharacterAccessory, resolveCharacterExpression, resolveCharacterOutfit, resolveCharacterPose } from "./src/ui/character-renderer.mjs?v=11";
 import { getBackgroundAsset, getGiftVehicleAsset, getNpcSprite } from "./src/assets/asset-manifest.mjs?v=14";
-import { getAvailableStoryChoices, getStoryScene, resolveStoryChoice, selectNextStoryScene } from "./src/story-manager.mjs?v=7";
-import { STORY_SCENES } from "./src/story-data.mjs?v=2";
+import { getAvailableStoryChoices, getStoryScene, resolveStoryChoice, selectNextStoryScene } from "./src/story-manager.mjs?v=8";
+import { STORY_SCENES } from "./src/story-data.mjs?v=3";
 import { createDaySnapshot, ensureNightState, formatNightTime, getDailyReport, getLateSleepEffects, NIGHT_END_MINUTES, resetForNextDay, setNightStartTime, spendNightTime } from "./src/night-manager.mjs?v=3";
 import { completeLateNightInvitation, getPendingLateNightInvitation, LATE_NIGHT_INVITATION_CHANCE, LATE_NIGHT_INVITATION_MESSAGE, LATE_NIGHT_INVITATION_MIN_DAY, LATE_NIGHT_INVITATION_START_MINUTES, maybeTriggerLateNightInvitation } from "./src/late-night-invitation-manager.mjs?v=1";
 import { preloadSceneAssets, resolvePhasePresentation, resolveStoryPresentation } from "./src/scene-presentation.mjs";
 import { createEventSceneSequence, createStoryReactionSequence, createStorySceneSequence, createTemptationReactionSequence, createTemptationSceneSequence, resolveInitialScenePresentation } from "./src/story-scene-controller.mjs?v=3";
-import { runDailyStoryDirector } from "./src/dynamic-story-director.mjs";
+import { runDailyStoryDirector } from "./src/dynamic-story-director.mjs?v=2";
 import { HAEUN_SPECIAL_EVENT_OUTFIT, HEROINE_OUTFITS, HEROINE_PROFILES, getEquippedHeroineOutfit, isOutfitUnlocked } from "./src/heroine-data.mjs?v=17";
 import { NPC_SOCIAL_GRAPH } from "./src/npcs-data.mjs";
 import { GIRLFRIEND_JOBS } from "./src/girlfriend-jobs-data.mjs";
@@ -670,8 +670,8 @@ function restoreEventCheckpoint(){
   if(!areGameplayEventsUnlocked()&&!isCampaignPrologueStory(saved.activeEvent)){state.eventRuntime={...saved,activeEvent:null,state:"IDLE",checkpoint:null,eventQueue:[],microQueue:[],pendingEvent:null,inputLock:{locked:false,owner:null,reason:null,lockedFor:0}};SaveManager.save(state);return;}
   const situation=SITUATION_EVENTS.find(event=>event.id===saved.activeEvent);
   if(situation){const index=Math.max(0,Number(saved.checkpoint.sequenceIndex)||0);openEventScene(situation,{resumeSequenceIndex:index});toast("진행 중이던 에피소드를 안전한 지점에서 복구했어요.");return;}
-  const story=getStoryScene(saved.activeEvent);if(story){openStoryScene(story);toast("진행 중이던 스토리를 Scene 시작점에서 복구했어요.");return;}
-  state.logs.push({time:`DAY ${state.day} · RECOVERY`,text:`알 수 없는 이벤트 ${saved.activeEvent}를 건너뛰고 안전 지점으로 복구했다.`});state.eventRuntime={...saved,activeEvent:null,state:"IDLE",checkpoint:null,inputLock:{locked:false,owner:null,reason:null,lockedFor:0}};SaveManager.save(state);
+  const story=getStoryScene(saved.activeEvent);if(story&&state.scenario?.enabled===true){openStoryScene(story);toast("진행 중이던 스토리를 Scene 시작점에서 복구했어요.");return;}
+  state.logs.push({time:`DAY ${state.day} · RECOVERY`,text:`알 수 없는 이벤트 ${saved.activeEvent}를 건너뛰고 안전 지점으로 복구했다.`});if(state.gameMode===GAME_MODES.FREE_ROMANCE)state.pendingStoryId=null;state.eventRuntime={...saved,activeEvent:null,state:"IDLE",checkpoint:null,inputLock:{locked:false,owner:null,reason:null,lockedFor:0}};SaveManager.save(state);
 }
 
 const MBTI_TYPES = ["ISTJ", "ISFJ", "INFJ", "INTJ", "ISTP", "ISFP", "INFP", "INTP", "ESTP", "ESFP", "ENFP", "ENTP", "ESTJ", "ESFJ", "ENFJ", "ENTJ"];
@@ -1330,7 +1330,7 @@ function openAlbumVideoLayer(entry){if(!entry)return;closeAlbumVideoLayer();cons
 function openNightPc() {
   const workButton=isWeekend(state.day)?"":`<button data-pc-action="work">💼 야간 업무<small>수입 증가 · 스트레스 증가</small></button>`;
   $("#modalContent").innerHTML=`<span class="eyebrow">MY COMPUTER · 60 MIN</span><h2>컴퓨터로 무엇을 할까?</h2><div class="pc-actions"><button data-pc-action="game">🎮 게임하기<small>스트레스 완화 · 피로 증가</small></button><button data-pc-action="study">📚 자기계발<small>업무 능력 증가 · 피로 증가</small></button>${workButton}</div>`;openModal();
-  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-10,fatigue:8,energy:-5}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:5,stress:10,fatigue:12,energy:-10}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
+  document.querySelectorAll("[data-pc-action]").forEach(button=>button.addEventListener("click",()=>{const id=button.dataset.pcAction,activity={game:{title:"게임하기",icon:"🎮",effects:{stress:-3,fatigue:5,energy:-3}},study:{title:"자기계발",icon:"📚",effects:{work:1,confidence:2,fatigue:5,energy:-5}},work:{title:"야간 업무",icon:"💼",effects:{money:50000,work:1,stress:7,fatigue:5,energy:-5}}}[id];if(!activity)return;const before=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,state[key]??0])),startTime=formatNightTime(ensureNightState(state).minutes),result=spendNightTime(state,60,activity.title);if(!result.ok){toast(result.reason);return;}applyEffects(state,activity.effects);if(activity.effects.money)appendTransaction(state,{category:"night-work",label:"야간 업무",amount:activity.effects.money});const changes=Object.fromEntries(Object.keys(activity.effects).map(key=>[key,Math.round((state[key]??0)-before[key])]));SaveManager.save(state);render();showNightPcResult(activity,result,startTime,changes);}));
 }
 
 function showNightPcResult(activity,result,startTime,changes) {
@@ -1431,7 +1431,7 @@ function applyAction() {
   if (initiatedMessage) { state.logs.push({time:`DAY ${state.day} · MESSAGE`,text:`${state.partner.name}: ${initiatedMessage.text}`}); toast(`${state.partner.name}에게 메시지가 왔어요`); }
   if (finishedDay) { dailyEvent(completedDay); advanceStockMarket(state); const transactions=processDayEndEconomy(state,completedDay); transactions.forEach(entry=>state.logs.push({time:`DAY ${completedDay} · ECONOMY`,text:`${entry.label} ${entry.amount>=0?'+':''}${money(entry.amount)}`})); runDailyStoryDirector(state,completedDay); SaveManager.save(state); if(state.day<=30){resetForNextDay(state);resetWorldForNextDay();} }
   const microEvents=eventsUnlocked?rollMicroEvents(state):[];microEvents.forEach(micro=>state.logs.push({time:`DAY ${micro.day} · MICRO`,text:micro.text}));
-  const event = eventsUnlocked?rollEvent(state):null;
+  const event = eventsUnlocked?rollRuntimeEvent(state):null;
   if (event) {
     state.logs.push({time:`DAY ${state.day} · EVENT`,text:`${event.title} — ${event.message}`});
     recordMemory(state,{type:"event",summary:event.title,importance:3,tags:["이벤트",event.id]});
@@ -1557,14 +1557,14 @@ function openDebug() {
   const keys = ["day","phase","appearanceSeed","money","health","energy","fatigue","stress","charm","fashion","confidence","work","social","affection","trust","excitement","attachment","conflict","relationshipStress"];
   const stateRows = keys.map(key=>`<div class="debug-stat"><span>${key}</span><b>${Math.round(state[key])}</b></div>`).join("");
   const personalityRows = Object.entries(state.partner.personality).map(([key,value])=>`<div class="debug-stat"><span>${key}</span><b>${value}</b></div>`).join("");
-  const eventDiagnostics=getEventDiagnostics(state);
+  const eventDiagnostics=getEventDiagnostics(state,getRuntimeEventDefinitions(state));
   const eventRows = eventDiagnostics.map(event=>`<div class="debug-event ${event.eligible?'':event.cooldownRemaining?'cooldown':'ineligible'}"><div><b>${event.title}</b><span>${event.eligible?`${Math.round(event.effectiveProbability*100)}%`:'0%'}</span></div><small>${event.kind==='story'?'스토리':'일반 랜덤'} · 우선순위 ${event.priority} · 기본 판정 ${Math.round(event.probability*100)}% · ${event.dailyLimitReached?'오늘 사건 한도 도달':event.cooldownRemaining?`재실행 대기 ${event.cooldownRemaining}일`:event.eligible?'실행 후보':'실행 불가'} · ${escapeHtml((event.eligible?event.triggerReasons:event.blockedReasons).join(' / ')||'기본 조건')}</small></div>`).join("");
   const microRows=getMicroEventDiagnostics(state).map(event=>`<div class="debug-event ${event.eligible?'':'ineligible'}"><div><b>${escapeHtml(event.title)}</b><span>${event.eligible?`${Math.round(event.probability*100)}%`:'0%'}</span></div><small>짧은 이벤트 · ${escapeHtml(event.category)} · 기본 판정 ${Math.round(event.probability*100)}% · ${event.cooldownRemaining?`재실행 대기 ${event.cooldownRemaining}일`:event.phaseEligible?'현재 시간대 실행 후보':`현재 시간대 제외 · 실행 phase ${event.phases.join(', ')}`}</small></div>`).join("");
   const director=state.storyDirector,analysis=director?.analyses?.at(-1),plan=director?.nextDayPlan;
   const threadRows=Object.entries(director?.threads??{}).sort((a,b)=>b[1]-a[1]).map(([id,value])=>`<div class="debug-stat"><span>${id}</span><b>${value}</b></div>`).join("")||`<p>첫 DAY 종료 후 분석됩니다.</p>`;
   const candidateRows=(plan?.eventCandidates??[]).map(candidate=>`<div class="debug-event ${candidate.blocked?'cooldown':''}"><div><b>${escapeHtml(candidate.title)}</b><span>${candidate.blocked?(candidate.blockedReason??"BLOCKED"):`${Math.round(candidate.finalProbability*100)}%`}</span></div><small>base ${Math.round(candidate.baseProbability*100)}% · ×${candidate.multiplier} · ${candidate.modifiers.map(item=>item.label).join(" · ")||"기본 가중치"}${candidate.cooldownRemaining?` · cooldown ${candidate.cooldownRemaining}`:''}</small></div>`).join("")||`<p>예약 후보가 없습니다.</p>`;
   const unresolvedRows=(director?.unresolvedEvents??[]).map(item=>`<div class="debug-event"><div><b>${item.id}</b><span>STAGE ${item.stage}</span></div><small>${item.type} · DAY ${item.originDay} · ${item.status}</small></div>`).join("")||`<p>미해결 사건이 없습니다.</p>`;
-  $("#modalContent").innerHTML=`<span class="eyebrow">ACCESSIBILITY · DIAGNOSTICS</span><h2>접근성 · 실행 진단</h2><p>현재 DAY ${state.day} · phase ${state.phase} 기준의 실제 실행 조건입니다. 확률은 조건과 재실행 대기를 통과한 후보별 판정 확률이며, 여러 후보가 통과하면 우선순위와 가중치로 한 사건만 선택됩니다.</p><div class="debug-launchers"><button id="characterManagerButton" class="primary-button" type="button">캐릭터 관리 · 히로인 ${HEROINE_PROFILES.length}명 · NPC ${state.npcs.length}명</button><button id="eventViewerButton" class="primary-button" type="button">Event Viewer · 에피소드 ${SITUATION_EVENTS.length}개</button><button id="eventInspectorButton" class="primary-button" type="button">Event Inspector · 실행 상태/큐/복구</button></div><h3>Story Director · ${analysis?`DAY ${analysis.day}`:"WAITING"}</h3><div class="debug-grid"><div class="debug-stat"><span>Relationship</span><b>${analysis?.relationshipState??"-"}</b></div><div class="debug-stat"><span>Tension</span><b>${analysis?.narrativeTension??0}</b></div><div class="debug-stat"><span>Dominant</span><b>${director?.dominantThread??"-"}</b></div><div class="debug-stat"><span>Status</span><b>${director?.dominantStatus??"-"}</b></div><div class="debug-stat"><span>Next Seed</span><b>${plan?.seed??"-"}</b></div><div class="debug-stat"><span>Foreshadow</span><b>R${director?.foreshadowing?.rival??0} · T${director?.foreshadowing?.temptation??0} · L${director?.foreshadowing?.lie??0}</b></div></div><h3>Active Threads</h3><div class="debug-grid">${threadRows}</div><h3>Next DAY Event Candidates</h3><div class="debug-events">${candidateRows}</div><h3>Unresolved Events</h3><div class="debug-events">${unresolvedRows}</div><h3>Game State</h3><div class="debug-grid">${stateRows}</div><h3>${state.partner.name} · Hidden Personality</h3><div class="debug-grid">${personalityRows}</div><h3>일반·스토리 사건 실행 진단</h3><div class="debug-events">${eventRows}</div><h3>짧은 이벤트 실행 진단</h3><div class="debug-events">${microRows}</div>`;
+  $("#modalContent").innerHTML=`<span class="eyebrow">ACCESSIBILITY · DIAGNOSTICS</span><h2>접근성 · 실행 진단</h2><p>현재 DAY ${state.day} · phase ${state.phase} 기준의 실제 실행 조건입니다. 확률은 조건과 재실행 대기를 통과한 후보별 판정 확률이며, 여러 후보가 통과하면 우선순위와 가중치로 한 사건만 선택됩니다.</p><div class="debug-launchers"><button id="characterManagerButton" class="primary-button" type="button">캐릭터 관리 · 히로인 ${HEROINE_PROFILES.length}명 · NPC ${state.npcs.length}명</button><button id="eventViewerButton" class="primary-button" type="button">Event Viewer · 에피소드 ${SITUATION_EVENTS.length}개</button><button id="eventInspectorButton" class="primary-button" type="button">Event Inspector · 실행 상태/큐/복구</button></div><h3>Story Director · ${analysis?`DAY ${analysis.day}`:"WAITING"}</h3><div class="debug-grid"><div class="debug-stat"><span>Relationship</span><b>${analysis?.relationshipState??"-"}</b></div><div class="debug-stat"><span>Tension</span><b>${analysis?.narrativeTension??0}</b></div><div class="debug-stat"><span>Dominant</span><b>${director?.dominantThread??"-"}</b></div><div class="debug-stat"><span>Status</span><b>${director?.dominantStatus??"-"}</b></div><div class="debug-stat"><span>Next Seed</span><b>${plan?.seed??"-"}</b></div><div class="debug-stat"><span>Foreshadow</span><b>R${director?.foreshadowing?.rival??0} · T${director?.foreshadowing?.temptation??0} · L${director?.foreshadowing?.lie??0}</b></div></div><h3>Active Threads</h3><div class="debug-grid">${threadRows}</div><h3>Next DAY Event Candidates</h3><div class="debug-events">${candidateRows}</div><h3>Unresolved Events</h3><div class="debug-events">${unresolvedRows}</div><h3>Game State</h3><div class="debug-grid">${stateRows}</div><h3>${state.partner.name} · Hidden Personality</h3><div class="debug-grid">${personalityRows}</div><h3>게임도구 이벤트 실행 진단</h3><div class="debug-events">${eventRows}</div><h3>짧은 이벤트 실행 진단</h3><div class="debug-events">${microRows}</div>`;
   openModal();
   $("#characterManagerButton").addEventListener("click",openCharacterManager);
   $("#eventViewerButton").addEventListener("click",openEventViewer);
@@ -1573,7 +1573,7 @@ function openDebug() {
 
 function openEventInspector(){
   const runtime=eventRuntime.snapshot();
-  const audit=auditEventSystems({storyScenes:STORY_SCENES,events:EVENT_DEFINITIONS,situationEvents:SITUATION_EVENTS});
+  const audit=auditEventSystems({storyScenes:state.scenario?.enabled===true?STORY_SCENES:[],events:state.gameMode===GAME_MODES.FREE_ROMANCE?[]:EVENT_DEFINITIONS,situationEvents:SITUATION_EVENTS});
   const stateRows=[
     ["ActiveEvent",runtime.activeEvent??"-"],["Scene",runtime.scene??"-"],["DialogueIndex",runtime.dialogueIndex],
     ["State",runtime.state],["InputLock",runtime.inputLock.locked?`${runtime.inputLock.owner} · ${runtime.inputLock.reason}`:"UNLOCKED"],
@@ -1799,7 +1799,7 @@ function showEnding(){ state.ended=true; const [title, desc] = determineEnding(s
 }
 function toast(message){ const t=$("#toast");t.textContent=message;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200); }
 
-function loadGame() { const loaded = SaveManager.load(); if (!loaded) { toast("불러올 수 있는 저장 데이터가 없어요."); return; } state = loaded; showGame(); if(state.breakup&&areGameplayEventsUnlocked())showBreakup(state.breakup);else if(state.day>30)showEnding();else if(state.pendingStoryId&&!state.eventRuntime?.activeEvent&&(areGameplayEventsUnlocked()||isCampaignPrologueStory(state.pendingStoryId)))openStoryScene(getStoryScene(state.pendingStoryId));else if(!state.eventRuntime?.activeEvent)toast(`DAY ${state.day} 저장 데이터를 불러왔어요.`); }
+function loadGame() { const loaded = SaveManager.load(); if (!loaded) { toast("불러올 수 있는 저장 데이터가 없어요."); return; } state = loaded; showGame(); if(state.breakup&&areGameplayEventsUnlocked())showBreakup(state.breakup);else if(state.day>30)showEnding();else if(state.pendingStoryId&&!state.eventRuntime?.activeEvent&&(areGameplayEventsUnlocked()||isCampaignPrologueStory(state.pendingStoryId))){const pendingStory=selectNextStoryScene(state);if(pendingStory)openStoryScene(pendingStory);else{SaveManager.save(state);toast(`DAY ${state.day} 저장 데이터를 불러왔어요.`);}}else if(!state.eventRuntime?.activeEvent)toast(`DAY ${state.day} 저장 데이터를 불러왔어요.`); }
 function saveGame() { if (!state) return; SaveManager.save(state); toast(`DAY ${state.day} 진행 상황을 저장했어요.`); }
 function openContinuePreview(){const loaded=SaveManager.load();if(!loaded){toast("이어할 저장 데이터가 없어요.");return;}const story=loaded.scenario?.enabled===true,mode=getGameModeConfig(loaded.gameMode),updated=loaded.updatedAt?new Intl.DateTimeFormat("ko-KR",{dateStyle:"medium",timeStyle:"short"}).format(new Date(loaded.updatedAt)):"저장 시각 없음";$("#modalContent").innerHTML=`<section class="continue-preview"><span>${story?"STORY MODE":"FREE MODE"}</span><h2>${story?"《결혼까지 30일!》":"나만의 30일"}</h2><div><strong>DAY ${loaded.day}</strong>${story?`<b>D-${Math.max(0,31-loaded.day)}</b>`:""}</div><p>${escapeHtml(mode.description)}</p><small>마지막 플레이 · ${escapeHtml(updated)}</small><button id="continueResumeButton" class="primary-button" type="button">이어하기 →</button></section>`;openModal();$("#continueResumeButton").addEventListener("click",()=>{closeModal();loadGame();});}
 

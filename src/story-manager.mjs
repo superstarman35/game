@@ -2,7 +2,7 @@ import { applyEffects, clamp } from "./game-core.mjs";
 import { appendTransaction } from "./economy-manager.mjs";
 import { meetsConditions } from "./event-manager.mjs";
 import { recordMemory } from "./memory-manager.mjs";
-import { STORY_SCENES } from "./story-data.mjs?v=2";
+import { STORY_SCENES } from "./story-data.mjs?v=3";
 import { applyHiddenRouteEffects, getHiddenRouteSceneEffects } from "./hidden-route-manager.mjs";
 import { combineChoiceEffects, getMbtiChoiceAdjustment } from "./event-choice-modifier.mjs";
 import { isContentAvailableForMode } from "./scenario-state.mjs";

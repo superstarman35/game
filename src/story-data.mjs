@@ -410,7 +410,11 @@ const STANDARD_STORY_SCENES = [
   }
 ];
 
-export const STORY_SCENES = [...MARRIAGE_30_STORY_SCENES,...STANDARD_STORY_SCENES,...HIDDEN_ROUTE_SCENES,...HEROINE_STORY_SCENES];
+// 자유모드의 실제 사건은 Tip 게임도구와 동일한 SITUATION_EVENTS 한 곳에서
+// 관리한다. 아래 레거시 장면은 기존 저장 데이터/기획 자료 호환을 위해
+// 보존하되 런타임 STORY_SCENES에는 포함하지 않는다.
+export const LEGACY_FREE_STORY_SCENES = [...STANDARD_STORY_SCENES,...HIDDEN_ROUTE_SCENES,...HEROINE_STORY_SCENES];
+export const STORY_SCENES = [...MARRIAGE_30_STORY_SCENES];
 
 const FRIEND_SCENE_IDS=new Set(["friend-warning","hidden-friend-question"]);
 const COWORKER_SCENE_IDS=new Set(["coworker-introduction","project-opportunity","promise-clash","hidden-cracks"]);

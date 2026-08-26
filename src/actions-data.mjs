@@ -10,7 +10,7 @@ export const ACTIONS = {
     { id:"morning-idle", icon:"☁️", title:"아무것도 안 하기", desc:"잠시 멈춰서 아무 계획 없이 시간을 보낸다.", costLabel:"변화 없음", timeCost:1, effects:{}, tag:"휴식" },
     { id:"morning-contact", icon:"💬", title:"다정하게 연락하기", desc:"좋은 아침 인사로 서로의 하루를 시작한다.", costLabel:"호감 +3 · 신뢰 +2", timeCost:1, fixedEffects:["affection","trust"], effects:{ affection:3, trust:2, energy:-3 }, tag:"연락" },
     { id:"morning-gym", icon:"🏃", title:"아침 운동", desc:"가볍게 뛰며 몸과 자신감을 관리한다.", costLabel:"건강 +3", timeCost:1, requirements:[{ stat:"energy", operator:">=", value:12, message:"체력 12 이상 필요" }], effects:{ health:3, charm:1, confidence:1, fatigue:4, energy:-3, stress:-1 }, tag:"자기관리" },
-    { id:"sleep-in", icon:"🛌", title:"조금 더 자기", desc:"피로를 풀지만 출근 준비는 아슬아슬하다.", costLabel:"시간 1", timeCost:1, effects:{ energy:15, fatigue:-22, work:-4, stress:-5 }, tag:"휴식" },
+    { id:"sleep-in", icon:"🛌", title:"조금 더 자기", desc:"피로를 풀지만 출근 준비는 아슬아슬하다.", costLabel:"에너지 +3 · 피로 -3", timeCost:1, effects:{ energy:3, fatigue:-3, work:-1, stress:-1 }, tag:"휴식" },
     { id:"early-work", icon:"☕", title:"일찍 출근하기", desc:"커피 한 잔과 함께 업무를 먼저 시작한다.", costLabel:"수입 +₩25,000", timeCost:1, effects:{ money:25000, work:8, energy:-8, fatigue:7, stress:8 }, tag:"성공" },
     { id:"manager-feedback", icon:"🗣️", title:"상사와 1:1 피드백", desc:"업무 조언을 얻어 성장 방향을 다듬는다.", costLabel:"스트레스 +5", timeCost:1, effects:{ work:7, confidence:4, stress:5, energy:-4 }, tag:"성장" }
   ],
@@ -83,7 +83,22 @@ const CAREER_ACTIONS = [
   ["day",{id:"career-unemployed-plan",icon:"🧭",title:"진로 계획 함께 세우기",desc:"다음 일을 찾을 수 있도록 강점과 목표를 함께 정리한다.",costLabel:"신뢰 +20",timeCost:1,careerIds:["unemployed"],effects:{trust:20,affection:10,confidence:6,stress:3},tag:"성장"}],
   ["evening",{id:"career-unemployed-refresh",icon:"🌿",title:"기분 전환하러 나가기",desc:"취업 걱정을 잠시 내려놓고 가까운 곳에서 쉬어 간다.",costLabel:"₩20,000",timeCost:1,careerIds:["unemployed"],requirements:[{stat:"money",operator:">=",value:20000,message:"자산 ₩20,000 이상 필요"}],effects:{money:-20000,affection:20,trust:8,stress:-15},tag:"데이트"}]
 ];
-CAREER_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push(action));
+export const GIRLFRIEND_SUPPORT_REWARD_SCALE = 0.5;
+const GIRLFRIEND_SUPPORT_TAGS = new Set(["직업지원","돌봄","성장"]);
+const GIRLFRIEND_SUPPORT_REWARD_STATS = new Set(["health","charm","fashion","confidence","work","social","affection","trust","excitement","attachment"]);
+
+export function scaleGirlfriendSupportRewards(action) {
+  const scaleReward=value=>Math.max(1,Math.round(value*GIRLFRIEND_SUPPORT_REWARD_SCALE));
+  const effects=Object.fromEntries(Object.entries(action.effects??{}).map(([key,value])=>{
+    if(GIRLFRIEND_SUPPORT_REWARD_STATS.has(key)&&value>0)return [key,scaleReward(value)];
+    if(key==="stress"&&value<0)return [key,-scaleReward(Math.abs(value))];
+    return [key,value];
+  }));
+  const costLabel=String(action.costLabel??"").includes("₩")?action.costLabel:String(action.costLabel??"").replace(/([+-])(\d+)/,(_,sign,value)=>`${sign}${scaleReward(Number(value))}`);
+  return {...action,costLabel,effects};
+}
+
+CAREER_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push(GIRLFRIEND_SUPPORT_TAGS.has(action.tag)?scaleGirlfriendSupportRewards(action):action));
 
 export const PLAYER_JOB_REWARD_SCALE = 0.5;
 const PLAYER_JOB_REWARD_STATS = new Set(["health","charm","fashion","confidence","work","social","affection","trust","excitement","attachment"]);

@@ -1,5 +1,5 @@
-import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=13";
-import { SaveManager } from "./src/save-manager.mjs?v=17";
+import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=14";
+import { SaveManager } from "./src/save-manager.mjs?v=18";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
 import { getEventDiagnostics, getRuntimeEventDefinitions, rollRuntimeEvent } from "./src/event-manager.mjs?v=10";
 import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=9";
@@ -21,12 +21,13 @@ import { applyNpcActionEffects, getNpcRelationshipStatus, isYujinSecretGirlfrien
 import { getTemptationOpportunity, resolveTemptation, TEMPTATION_CHOICES } from "./src/temptation-manager.mjs?v=2";
 import { applyRivalPressure, calculateRivalRisk } from "./src/rival-manager.mjs";
 import { calculateBreakupRisk, evaluateBreakup } from "./src/conflict-manager.mjs";
-import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=10";
-import { requestGirlfriendReply } from "./src/ai-chat-client.mjs?v=2";
-import { HAEUN_MESSAGE_CORPUS } from "./src/haeun-message-data.mjs?v=1";
+import { analyzeConversationInput, buildConversationContext, getContextualOpening, getHostileConversationResponse, getSuggestedConversationReplies, inferConversationQuestion, recordConversationTurn } from "./src/conversation-manager.mjs?v=12";
+import { requestGirlfriendReply } from "./src/ai-chat-client.mjs?v=4";
+import { HAEUN_MESSAGE_CORPUS } from "./src/haeun-message-data.mjs?v=3";
+import { applyGirlfriendLoan } from "./src/girlfriend-loan-manager.mjs?v=1";
 import { advanceStockMarket, buyStock, getPortfolioSummary, sellStock } from "./src/investment-manager.mjs?v=2";
 import { buyInstantLottery, DAILY_TICKET_LIMIT, getLotterySummary, LOTTERY_TICKET_PRICE } from "./src/lottery-manager.mjs?v=3";
-import { analyzePlayHistory } from "./src/ending-manager.mjs";
+import { analyzePlayHistory, ENDING_DEFINITIONS, ENDING_VIDEO_SPEC, getEndingToolEntries } from "./src/ending-manager.mjs?v=1";
 import { SoundManager } from "./src/sound-manager.mjs?v=6";
 import { DAY1_BGM_CUES } from "./src/day1-audio-data.mjs";
 import { LOCKED_DAY1_SCENE_ID, applyLockedDay1ChoiceState, getLockedDay1Segment } from "./src/day1-campaign-runtime.mjs";
@@ -52,7 +53,7 @@ import { getGirlfriendVisual } from "./src/girlfriend-visual-data.mjs";
 import { createPlayerProfile, PLAYER_ARCHETYPES, sanitizePlayerNameInput } from "./src/player-profile-data.mjs?v=2";
 import { getRandomPlayerName } from "./src/player-names-data.mjs?v=1";
 import { GAME_MODES, getGameModeConfig } from "./src/scenario-state.mjs?v=2";
-import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=12";
+import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=13";
 import { getActionResultVideo } from "./src/action-result-videos.mjs?v=2";
 import { discoverLocation, getNearbyLocation, getPlayerHomeProfile, getRoadCells, isWorldLocationOpen, moveWorldPlayer, selectWorldTransport, TRANSPORT_OPTIONS, travelToCity, WORLD_ATLAS, WORLD_MAPS } from "./src/world-map-manager.mjs?v=3";
 import { getMapLocationAsset } from "./src/map-location-assets.mjs";
@@ -91,6 +92,7 @@ let immersiveScene = null;
 let sceneAdvanceTimer = null;
 let gameToolsTab = "outfits";
 let selectedToolsNpcId = null;
+let selectedToolsEndingId = null;
 const eventRuntime = new EventRuntimeManager({timeoutMs:5000,onWarning:warning=>{if(state){state.logs.push({time:`DAY ${state.day} · WATCHDOG`,text:`${warning.eventId} · ${warning.state} ${warning.elapsed}ms`});persistEventRuntime(true);}},onRecover:()=>{const layer=$("#sceneTransition");if(layer){layer.classList.remove("active");layer.classList.add("hidden");}if(immersiveScene)renderImmersiveStep();}});
 const runtimeWatchdogTimer=setInterval(()=>eventRuntime.watchdog(),1000);
 const modalFocusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
@@ -1504,6 +1506,12 @@ async function chatReply(message){
   if(activeConversation!==session)return;
   session.replyPending=false;
   if(!response){renderConversationSession();return;}
+  if(response.transaction?.type==="girlfriend-loan"){
+    const loan=applyGirlfriendLoan(state,response.transaction.amount);
+    if(loan.ok){const moneyValue=$("#moneyValue");if(moneyValue)moneyValue.textContent=money(state.money);toast(`${state.partner.name}에게 ${money(loan.amount)}을 빌렸어요. 보유 자산에 바로 반영됐습니다.`);}
+    else if(loan.reason==="already-borrowed")response={...response,text:"전에 한 번 빌려줬잖아. 이번에는 더 빌려줄 수 없어.",transaction:null};
+    else response={...response,text:"미안하지만 지금 우리 신뢰로는 돈을 빌려줄 수 없어.",transaction:null};
+  }
   const scale=session.turn>=7?0:session.turn>=4?.5:1,effects=Object.fromEntries(Object.entries(response.effects??{}).map(([key,value])=>[key,Math.round(value*(analysis.level==="hostile"?1:scale))]));
   for(const [key,value] of Object.entries(effects))session.effects[key]=(session.effects[key]??0)+value;
   session.messages.push({speaker:"her",text:response.text});session.turn+=1;
@@ -1555,11 +1563,22 @@ function closeGameTools() {
   layer.setAttribute("aria-hidden","true");backdrop.setAttribute("aria-hidden","true");trigger.setAttribute("aria-expanded","false");
 }
 
+function renderEndingToolsContent(){
+  const endings=getEndingToolEntries(state),predicted=endings.find(ending=>ending.selected)??endings.at(-1);
+  if(!endings.some(ending=>ending.id===selectedToolsEndingId))selectedToolsEndingId=predicted.id;
+  const selected=endings.find(ending=>ending.id===selectedToolsEndingId)??predicted;
+  const relatedEvents=selected.relatedEventIds.map(id=>SITUATION_EVENTS.find(event=>event.id===id)).filter(Boolean);
+  const eventMarkup=[...relatedEvents.map(event=>`<button type="button" data-tools-event="${escapeHtml(event.id)}"><span>EVENT</span>${escapeHtml(event.title)}</button>`),...selected.systemEvents.map(label=>`<span><i>SYSTEM</i>${escapeHtml(label)}</span>`)].join("");
+  const groups=endings.reduce((result,ending)=>{(result[ending.category]??=[]).push(ending);return result;},{});
+  const endingLists=Object.entries(groups).map(([category,items])=>`<section class="tools-ending-group"><h3>${escapeHtml(category)} <span>${items.length}</span></h3>${items.map(ending=>`<button type="button" data-tools-ending="${escapeHtml(ending.id)}" class="tools-ending-row ${ending.id===selected.id?'active':''} ${ending.selected?'predicted':''}"><strong>${String(ending.priority).padStart(2,'0')}</strong><span><b>${escapeHtml(ending.title)}</b><small>${escapeHtml(ending.conditionLabel)}</small></span><em>${ending.selected?'현재 예상':ending.eligible?'조건 충족':'미충족'}</em></button>`).join("")}</section>`).join("");
+  return `<div class="game-tools-intro tools-ending-intro"><b>엔딩 전체 목록 · ${endings.length}종</b><span>위쪽 엔딩부터 우선 판정하며, 여러 조건이 동시에 충족되면 가장 높은 순위의 엔딩이 선택됩니다. 목록을 누르면 조건과 관련 이벤트, 향후 영상 연결 경로를 확인할 수 있습니다.</span></div><article class="tools-ending-prediction"><span>CURRENT ENDING FORECAST</span><b>${escapeHtml(predicted.title)}</b><small>${escapeHtml(predicted.description)}</small></article><article class="tools-ending-detail"><header><span>ENDING ${String(selected.priority).padStart(2,'0')} · ${escapeHtml(selected.category)}</span><h3>${escapeHtml(selected.title)}</h3><mark class="${selected.selected?'selected':selected.eligible?'eligible':''}">${selected.selected?'현재 예상 엔딩':selected.eligible?'현재 조건 충족':'현재 조건 미충족'}</mark></header><p>${escapeHtml(selected.description)}</p><dl><div><dt>판정 조건</dt><dd>${escapeHtml(selected.conditionLabel)}</dd></div><div><dt>판정 순위</dt><dd>${selected.priority} / ${endings.length} · 위 조건부터 우선 적용</dd></div></dl><section class="tools-ending-events"><h4>관련 조건·이벤트</h4><div>${eventMarkup||'<span><i>SYSTEM</i>DAY 30 최종 판정</span>'}</div></section><section class="tools-ending-video-plan"><div class="tools-ending-video-placeholder"><i class="fa-solid fa-film"></i><b>ENDING VIDEO · PLANNED</b><small>영상 파일 추가 시 이 영역에서 미리보기 및 재생</small></div><dl><div><dt>영상</dt><dd>${escapeHtml(selected.video.assetPath)}</dd></div><div><dt>포스터</dt><dd>${escapeHtml(selected.video.posterPath)}</dd></div><div><dt>제작 규격</dt><dd>${escapeHtml(ENDING_VIDEO_SPEC.format)} · ${escapeHtml(ENDING_VIDEO_SPEC.resolution)} · ${escapeHtml(ENDING_VIDEO_SPEC.duration)}</dd></div><div><dt>재생 방식</dt><dd>${escapeHtml(ENDING_VIDEO_SPEC.playback)}</dd></div></dl></section></article><div class="tools-ending-list">${endingLists}</div>`;
+}
+
 function renderGameTools() {
   if(!state)return;
   const yuriEvent=SITUATION_EVENTS.find(event=>event.npcId==="player-ex");
   const yuriNpc=(state.npcs??[]).find(npc=>npc.id==="player-ex"),yujinNpc=(state.npcs??[]).find(npc=>npc.id==="female-coworker"),yuriReunionComplete=hasCompletedYuriReunion(state);
-  const tabs=[["outfits","의상",HEROINE_OUTFITS.filter(item=>item.heroineId===state.partner.heroineId).length],["events","이벤트",SITUATION_EVENTS.length+1],["maps","지도",Object.keys(WORLD_MAPS).length],["npcs","NPC",state.npcs?.length??0],["yuri","전여자친구",1]];
+  const tabs=[["outfits","의상",HEROINE_OUTFITS.filter(item=>item.heroineId===state.partner.heroineId).length],["events","이벤트",SITUATION_EVENTS.length+1],["maps","지도",Object.keys(WORLD_MAPS).length],["npcs","NPC",state.npcs?.length??0],["endings","엔딩",ENDING_DEFINITIONS.length],["yuri","전여자친구",1]];
   $("#gameToolsTabs").innerHTML=tabs.map(([id,label,count])=>`<button type="button" data-tools-tab="${id}" class="${gameToolsTab===id?"active":""}"><span>${label}</span><b>${count}</b></button>`).join("");
   const content=$("#gameToolsContent");
   if(gameToolsTab==="outfits"){
@@ -1578,6 +1597,8 @@ function renderGameTools() {
     content.innerHTML=`<div class="game-tools-intro"><b>전체 이벤트 · 발생 확률</b><span>자유모드 이벤트는 DAY 4부터 조건을 충족할 때 판정되며 하루에 최대 1개만 발생합니다. 아래 확률은 각 판정 기회당 기본 확률입니다.</span></div>${yuriEvent?`<section class="tools-event-group tools-featured-event"><h3>특별 이벤트 <span>2</span></h3><button type="button" class="tools-list-row" data-tools-yuri-event="${yuriEvent.id}"><span><b>전여자친구 유리</b><small>첫 재회 1회 · 카페 방문당 ${formatEventProbability(yuriEvent.probability)} · 이후 카페 모퉁이 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} 반복 조우</small></span><em>${formatEventProbability(yuriEvent.probability)}</em></button><div class="tools-list-row"><span><b>직장 동료 유진 · 심야 포차거리</b><small>22:00 이후 심야 포차거리 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} · 선택에 따라 NPC 관계 상승</small></span><em>${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)}</em></div></section>`:""}<section class="tools-event-group"><h3>심야 메시지 이벤트 <span>1</span></h3><button type="button" class="tools-list-row" data-tools-late-invitation><span><b>보고 싶어 · 늦은 밤의 초대</b><small>DAY ${LATE_NIGHT_INVITATION_MIN_DAY}+ · 22:00 이후 · 하루 1회 판정 · ${escapeHtml(invitationStatus)}</small></span><em>${formatEventProbability(LATE_NIGHT_INVITATION_CHANCE)}</em></button></section>${Object.entries(groups).map(([label,events])=>`<section class="tools-event-group"><h3>${escapeHtml(label)} <span>${events.length}</span></h3>${events.map(event=>`<button type="button" class="tools-list-row" data-tools-event="${event.id}" aria-label="${escapeHtml(event.title)} · ${getEventProbabilitySummary(event)}"><span><b>${escapeHtml(event.title)}</b><small>${event.conditionLabel?`조건: ${escapeHtml(event.conditionLabel)} · `:""}${getEventProbabilitySummary(event)} · DAY ${event.dayRange?.[0]??"-"}–${event.dayRange?.[1]??"-"} · ${event.repeatable===false?"1회 한정":"반복 가능"}</small></span><em>${formatEventProbability(event.probability)}</em></button>`).join("")}</section>`).join("")}`;
   }else if(gameToolsTab==="maps"){
     content.innerHTML=`<div class="game-tools-intro"><b>지도·장소 이벤트</b><span>19:00–21:59에는 여자친구와 함께 외출하고, 22:00 이후에는 혼자 외출합니다. 22:00 이후 일반 장소 이벤트에는 여자친구 캐릭터가 표시되지 않습니다.</span></div><div class="tools-map-list">${Object.values(WORLD_MAPS).map(map=>`<section class="tools-map-card"><header><span>${map.theme.toUpperCase()}</span><b>${escapeHtml(map.name)}</b><small>${escapeHtml(map.subtitle)}</small></header><div>${map.locations.map(location=>`<article><span>${location.icon}</span><div><b>${escapeHtml(location.name)}</b><small>${escapeHtml(location.category)} · ${escapeHtml(location.description)}${location.id==="small-cafe"?" · 유리 반복 조우 50%":location.id==="night-food"?" · 22시 이후 유진 조우 50%":""}</small></div><button type="button" data-tools-map-go="${map.id}:${location.id}">이동</button>${location.category!=="home"?`<button type="button" data-tools-map-event="${map.id}:${location.id}">이벤트</button>`:""}</article>`).join("")}</div></section>`).join("")}</div>`;
+  }else if(gameToolsTab==="endings"){
+    content.innerHTML=renderEndingToolsContent();
   }else{
     selectedToolsNpcId??=state.npcs?.[0]?.id??null;
     const selected=(state.npcs??[]).find(npc=>npc.id===selectedToolsNpcId),selectedSprite=selected?getNpcSprite(selected.id):"",related=selected?SITUATION_EVENTS.filter(event=>event.npcId===selected.id||event.npcId===selected.role||event.relatedNpcIds?.includes(selected.id)):[];
@@ -1590,6 +1611,7 @@ function renderGameTools() {
   document.querySelector("[data-tools-yuri-event]")?.addEventListener("click",event=>{const selected=SITUATION_EVENTS.find(item=>item.id===event.currentTarget.dataset.toolsYuriEvent);if(!selected)return;closeGameTools();$(".play-panel").classList.remove("hidden");$("#nightHome").classList.add("hidden");$("#worldMap").classList.add("hidden");openEventScene(structuredClone(selected),{debugPreview:true});});
   document.querySelector("[data-tools-late-invitation]")?.addEventListener("click",openLateNightInvitationToolDetail);
   document.querySelectorAll("[data-tools-npc]").forEach(button=>button.addEventListener("click",()=>{selectedToolsNpcId=button.dataset.toolsNpc;renderGameTools();}));
+  document.querySelectorAll("[data-tools-ending]").forEach(button=>button.addEventListener("click",()=>{selectedToolsEndingId=button.dataset.toolsEnding;renderGameTools();}));
   const openMapTarget=(value,withEvent=false)=>{const [mapId,locationId]=value.split(":"),map=WORLD_MAPS[mapId],location=map?.locations.find(item=>item.id===locationId);if(!map||!location)return;state.world.mode="district";state.world.cityId=map.cityId;state.world.districtId=map.id;state.world.x=location.x;state.world.y=location.y;state.world.transportConfirmed=true;if(!state.world.discoveredLocations.includes(location.id))state.world.discoveredLocations.push(location.id);SaveManager.save(state);closeGameTools();renderWorldMap();if(withEvent)setTimeout(()=>openWorldEventLayer(map,location),120);};
   document.querySelectorAll("[data-tools-map-go]").forEach(button=>button.addEventListener("click",()=>openMapTarget(button.dataset.toolsMapGo)));
   document.querySelectorAll("[data-tools-map-event]").forEach(button=>button.addEventListener("click",()=>openMapTarget(button.dataset.toolsMapEvent,true)));

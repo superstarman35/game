@@ -22,6 +22,8 @@ export const ACTION_RESULT_ASSETS = Object.freeze({
   "career-finance-plan": "assets/action-results/generated/career-finance-plan-01.png",
   "wealthy-spend-relief": "assets/action-results/generated/wealthy-spend-relief-01.png",
   "wealthy-social-club": "assets/action-results/generated/wealthy-social-club-01.png",
+  "handsome-meet-friends": "assets/action-results/generated/handsome-meet-friends-01.png",
+  "handsome-meet-female-friends": "assets/action-results/generated/handsome-meet-female-friends-01.png",
   "career-finance-report": "assets/action-results/generated/career-finance-report-01.png",
   "career-flower-delivery": "assets/action-results/generated/career-flower-delivery-01.png",
   "career-bouquet": "assets/action-results/generated/career-bouquet-01.png",

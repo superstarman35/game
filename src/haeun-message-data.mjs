@@ -1,3 +1,5 @@
+import { GIRLFRIEND_LOAN_MIN_TRUST, getGirlfriendLoanAmount } from "./girlfriend-loan-manager.mjs?v=1";
+
 const EMOTIONAL_FOLLOW_UPS = Object.freeze([
   "그래서 너는 어떻게 생각해?",
   "네 이야기도 조금 더 듣고 싶어.",
@@ -98,6 +100,74 @@ const TOPIC_GROUPS = Object.freeze({
 });
 
 const FOLLOW_UP_GROUPS = Object.freeze({emotional:EMOTIONAL_FOLLOW_UPS,affection:AFFECTION_FOLLOW_UPS,planning:PLANNING_FOLLOW_UPS,casual:CASUAL_FOLLOW_UPS});
+
+const SHORT_TOPIC_PHRASES = Object.freeze({
+  apology:"미안한 마음",love:"좋아한다는 말",missing:"보고 싶은 마음",gratitude:"고맙다는 말",fatigue:"피곤한 이야기",
+  sadness:"속상한 마음",anger:"화난 일",anxiety:"걱정되는 일",happiness:"기쁜 일",work:"회사 이야기",
+  meal:"밥 이야기",sleep:"잠 이야기",health:"몸 상태",date:"데이트 이야기",weekend:"주말 계획",
+  gift:"선물 이야기",memory:"우리 기억",future:"우리 미래",family:"가족 이야기",friends:"친구 이야기",
+  money:"돈 이야기",conflict:"서운했던 일",encouragement:"응원할 일",daily:"오늘 하루",general:"네 이야기"
+});
+
+const SHORT_OPENERS = Object.freeze([
+  "응, {topic}은 들었어.","{topic} 때문이구나.","알겠어. {topic} 이야기네.","{topic}에 관한 말이지?", "그래, {topic}부터 보자.",
+  "응. {topic} 더 말해 줘.","{topic}에 네 마음이 있구나.","네가 말한 {topic}, 기억할게.","{topic}라면 듣고 있어.","응, {topic}이 중요하구나."
+]);
+
+const SHORT_TAILS = Object.freeze([
+  "조금만 더 말해 줘.","응.","그래.","알겠어.","계속 말해 줘.","천천히 해도 돼.","나는 듣고 있어.","그랬구나.","네 마음은 알겠어.","지금은 괜찮아.",
+  "나도 생각해 볼게.","짧게 말해도 돼.","무슨 뜻인지 알겠어.","오늘은 여기부터 얘기하자.","그다음은?", "그래서 어떻게 됐어?", "네 생각은 어때?", "조금 궁금해.","나한테 말해 줘서 고마워.","만나서도 얘기하자."
+]);
+
+export const HAEUN_REFUSAL_REPLIES = Object.freeze([
+  "무슨 말을 하려는지 잘 모르겠어. 지금은 대답하고 싶지 않아.",
+  "그런 식으로 말하면 대화를 이어 가고 싶지 않아.",
+  "장난인지 모르겠지만 조금 불편해. 지금은 답하지 않을게.",
+  "말을 정리해서 다시 해 줘. 지금 메시지에는 대답하고 싶지 않아.",
+  "무슨 뜻인지 설명해 주기 전에는 대답하지 않을래.",
+  "나를 불편하게 만드는 말에는 굳이 답하고 싶지 않아.",
+  "지금 말투는 이해하기도 어렵고 편하지도 않아. 잠깐 대화를 쉬자.",
+  "그 요구에는 대답하지 않을게. 서로 존중하는 말로 다시 이야기해 줘.",
+  "억지로 답을 요구하면 더 말하고 싶지 않아져.",
+  "그런 이야기는 싫어. 지금은 다른 대화도 하고 싶지 않아.",
+  "계속 그런 식으로 보내면 오늘 대화는 여기서 끝낼게.",
+  "내가 싫다고 느끼는 말에는 분명하게 대답하지 않겠다고 말할게."
+]);
+
+const HAEUN_LOAN_APPROVAL_REPLIES = Object.freeze([
+  "응. 이번 한 번만 {amount}원 빌려줄게. 꼭 필요한 데 써.",
+  "지금 바로 {amount}원 보냈어. 한 번만 도와주는 거니까 계획해서 써 줘.",
+  "네가 필요하다고 하니 {amount}원 빌려줄게. 다음에는 미리 이야기해 줘.",
+  "알겠어. {amount}원은 내가 빌려줄 수 있어. 이번 한 번만이야.",
+  "믿고 {amount}원 보냈어. 급한 일부터 해결하고 나중에 상황을 알려 줘.",
+  "이번에는 내가 도와줄게. {amount}원이 보유 자산에 들어갔을 거야."
+]);
+
+const HAEUN_LOAN_LOW_TRUST_REPLIES = Object.freeze([
+  "내가 왜 너한테 돈을 빌려줘야 해? 지금은 그 정도로 믿기 어려워.",
+  "미안하지만 지금 우리 신뢰로는 돈을 빌려줄 수 없어.",
+  "돈 문제는 믿음이 있어야 가능해. 지금은 빌려주지 않을게.",
+  "아직은 선뜻 돈을 보낼 만큼 마음이 놓이지 않아.",
+  "지금 관계에서는 돈을 빌려달라는 부탁이 부담스러워. 거절할게.",
+  "신뢰가 더 쌓이기 전에는 돈을 빌려주는 일은 하지 않을래."
+]);
+
+const HAEUN_LOAN_REPEAT_REPLIES = Object.freeze([
+  "전에 한 번 빌려줬잖아. 이번에는 더 빌려줄 수 없어.",
+  "이미 도와준 돈이 있어서 추가로 빌려주는 건 어려워.",
+  "이번 한 번만이라고 했어. 같은 부탁에는 더 답해 줄 수 없어.",
+  "먼저 전에 빌린 돈부터 정리해 줘. 추가 대여는 하지 않을게.",
+  "돈을 계속 빌려주는 관계가 되고 싶지는 않아. 이번에는 안 돼.",
+  "이미 한 차례 도와줬으니 이번 부탁은 거절할게."
+]);
+
+const UNCOMFORTABLE_MESSAGE_PATTERNS = Object.freeze([
+  /(?:벗어|야한|노출|몸매|가슴|잠자리)/,
+  /(?:사진|영상).{0,8}(?:당장|빨리).{0,5}(?:보내|보여)/,
+  /(?:시키는\s*대로|내\s*말만\s*들어|여자친구면\s*당연|말대꾸\s*하지)/,
+  /(?:대답|답장).{0,8}(?:당장|빨리|명령)/,
+  /(?:복종|명령).{0,8}(?:해|따라)/
+]);
 
 const topic = (id, label, patterns, responses, continuations, effects={affection:3,trust:3}) => Object.freeze({
   id,label,patterns:Object.freeze(patterns),responses:Object.freeze(responses),continuations:Object.freeze(continuations),effects:Object.freeze(effects)
@@ -290,9 +360,20 @@ function buildCorpus(){
         id:`haeun-${definition.id}-${responseIndex+1}-${continuationIndex+1}-${followUpIndex+1}`,
         topicId:definition.id,
         text:`${response} ${continuation} ${followUp}`,
+        style:"full",
         effects:definition.effects
       }));
     })));
+    const shortTopic=SHORT_TOPIC_PHRASES[definition.id]??definition.label;
+    SHORT_OPENERS.forEach((opener,openerIndex)=>SHORT_TAILS.forEach((tail,tailIndex)=>{
+      records.push(Object.freeze({
+        id:`haeun-${definition.id}-short-${openerIndex+1}-${tailIndex+1}`,
+        topicId:definition.id,
+        text:`${opener.replace("{topic}",shortTopic)} ${tail}`,
+        style:"short",
+        effects:definition.effects
+      }));
+    }));
   }
   return Object.freeze(records);
 }
@@ -306,8 +387,26 @@ function render(text,context){
   return String(text).replaceAll("{player}",player).replaceAll("{partner}",partner).replaceAll("{job}",context?.player?.job??"일").replaceAll("{time}",phaseNames[context?.phase]??"오늘");
 }
 
+export function isHaeunLoanRequest(message){
+  const value=normalize(message);
+  return /(?:돈|현금|생활비|급전|10만|십만|20만|이십만|30만|삼십만).{0,14}(?:빌려|빌릴|빌려줄|빌려\s*줄)|(?:빌려|빌릴).{0,14}(?:돈|현금|생활비|급전)/.test(value);
+}
+
+export function isHaeunBoundaryMessage(message){
+  const raw=String(message??"").normalize("NFKC").trim(),value=normalize(raw),compact=raw.replace(/\s+/g,"");
+  if(!raw)return false;
+  if(UNCOMFORTABLE_MESSAGE_PATTERNS.some(pattern=>pattern.test(value)))return true;
+  if(compact.length>=5&&/^[!?.,~ㅋㅎㅠㅜ]+$/u.test(compact))return true;
+  if(compact.length>=6&&/^[ㄱ-ㅎㅏ-ㅣ\u1100-\u11ff]+$/u.test(compact)&&new Set(compact).size<=6)return true;
+  if(compact.length>=7&&/^[a-z]+$/i.test(compact)&&!/(love|sorry|hello|thanks|thankyou|goodnight|missyou)/i.test(compact))return true;
+  if(/(.)\1{7,}/u.test(compact))return true;
+  return false;
+}
+
 export function classifyHaeunMessage(message,session={}){
   const value=normalize(message),lastQuestion=session?.lastQuestionId;
+  if(isHaeunLoanRequest(message))return "loan";
+  if(isHaeunBoundaryMessage(message))return "boundary";
   if(/^(응|어|그래|맞아|좋아|웅|그럼|당연)([.!~ㅋㅎ]*)$/.test(value)||/^(아니|싫어|별로|됐어|안돼)([.!~ㅋㅎ]*)$/.test(value)){
     const questionTopics={"date-plan":"date",meal:"meal",work:"work",future:"future",wellbeing:"fatigue"};
     return questionTopics[lastQuestion]??session?.topic??"general";
@@ -316,13 +415,22 @@ export function classifyHaeunMessage(message,session={}){
 }
 
 export function getHaeunMessageReply(context,message){
-  const topicId=classifyHaeunMessage(message,context?.sessionState),definition=HAEUN_MESSAGE_TOPICS.find(item=>item.id===topicId)??HAEUN_MESSAGE_TOPICS.at(-1);
-  const all=HAEUN_MESSAGE_CORPUS.filter(item=>item.topicId===definition.id),recent=new Set(context?.sessionState?.recentReplyIds??[]),available=all.filter(item=>!recent.has(item.id)),pool=available.length?available:all;
   const relationshipSeed=Math.round((Number(context?.relationship?.affection)||0)+(Number(context?.relationship?.trust)||0));
-  const seed=hash(`${normalize(message)}|${context?.day??0}|${context?.phase??0}|${context?.sessionState?.turn??0}|${context?.sessionState?.variantSeed??0}|${relationshipSeed}`),record=pool[seed%pool.length];
-  return {id:record.id,replyId:record.id,topic:definition.id,text:render(record.text,context),effects:{...record.effects},source:"haeun-corpus"};
+  const seed=hash(`${normalize(message)}|${context?.day??0}|${context?.phase??0}|${context?.sessionState?.turn??0}|${context?.sessionState?.variantSeed??0}|${relationshipSeed}`),topicId=classifyHaeunMessage(message,context?.sessionState);
+  if(topicId==="loan"){
+    const borrowed=context?.girlfriendLoan?.borrowed===true,trust=Number(context?.relationship?.trust)||0,loanState=borrowed?"repeat":trust<GIRLFRIEND_LOAN_MIN_TRUST?"low-trust":"approved",amount=getGirlfriendLoanAmount(seed);
+    const templates=loanState==="repeat"?HAEUN_LOAN_REPEAT_REPLIES:loanState==="low-trust"?HAEUN_LOAN_LOW_TRUST_REPLIES:HAEUN_LOAN_APPROVAL_REPLIES,template=templates[seed%templates.length],text=template.replace("{amount}",amount.toLocaleString("ko-KR"));
+    return {id:`haeun-loan-${loanState}-${seed%templates.length+1}`,replyId:`haeun-loan-${loanState}-${seed%templates.length+1}`,topic:"loan",text,effects:{},source:`haeun-loan-${loanState}`,style:"short",transaction:loanState==="approved"?{type:"girlfriend-loan",amount}:null};
+  }
+  if(topicId==="boundary"){
+    const recent=new Set(context?.sessionState?.recentReplyIds??[]),items=HAEUN_REFUSAL_REPLIES.map((text,index)=>({id:`haeun-boundary-${index+1}`,text})),available=items.filter(item=>!recent.has(item.id)),pool=available.length?available:items,record=pool[seed%pool.length];
+    return {id:record.id,replyId:record.id,topic:"boundary",text:record.text,effects:{affection:-1,trust:-2,conflict:1,relationshipStress:2},source:"haeun-boundary",style:"short"};
+  }
+  const definition=HAEUN_MESSAGE_TOPICS.find(item=>item.id===topicId)??HAEUN_MESSAGE_TOPICS.at(-1),all=HAEUN_MESSAGE_CORPUS.filter(item=>item.topicId===definition.id),recent=new Set(context?.sessionState?.recentReplyIds??[]);
+  const preferShort=normalize(message).length<=10||seed%3===0,styled=all.filter(item=>item.style===(preferShort?"short":"full")),available=styled.filter(item=>!recent.has(item.id)),pool=available.length?available:styled,record=pool[seed%pool.length];
+  return {id:record.id,replyId:record.id,topic:definition.id,text:render(record.text,context),effects:{...record.effects},source:"haeun-corpus",style:record.style};
 }
 
 export function validateHaeunMessageCorpus(corpus=HAEUN_MESSAGE_CORPUS){
-  return Array.isArray(corpus)&&corpus.length===5000&&new Set(corpus.map(item=>item.id)).size===5000&&new Set(corpus.map(item=>item.text)).size===5000&&corpus.every(item=>typeof item.topicId==="string"&&typeof item.text==="string"&&item.text.length>=40&&Object.values(item.effects).every(Number.isFinite));
+  return Array.isArray(corpus)&&corpus.length===10000&&new Set(corpus.map(item=>item.id)).size===10000&&new Set(corpus.map(item=>item.text)).size===10000&&corpus.filter(item=>item.style==="short").length===5000&&corpus.filter(item=>item.style==="full").length===5000&&corpus.every(item=>typeof item.topicId==="string"&&typeof item.text==="string"&&item.text.length>=10&&["short","full"].includes(item.style)&&Object.values(item.effects).every(Number.isFinite));
 }

@@ -1,6 +1,6 @@
 import { getMemoryContext } from "./memory-manager.mjs";
 import { getItem } from "./items-data.mjs";
-import { getHaeunMessageReply } from "./haeun-message-data.mjs?v=1";
+import { getHaeunMessageReply } from "./haeun-message-data.mjs?v=3";
 
 export function buildConversationContext(state) {
   const recentActions = (state.actionHistory ?? []).slice(-6).map(entry => ({ day:entry.day, actionId:entry.actionId, tag:entry.tag }));
@@ -20,7 +20,7 @@ export function buildConversationContext(state) {
     girlfriend:{ name:state.partner.name, bio:state.partner.bio, heroineId:state.partner.heroineId, age:state.partner.age, ageCategory:state.partner.ageCategory, studentSafe:Boolean(state.partner.studentSafe), archetype:state.partner.archetype, aiVoice:state.partner.aiVoice, messageVoice:state.partner.messageVoice??null, career:structuredClone(state.partner.career??null), personality:{ ...state.partner.personality }, currentOutfit:wornOutfit ? { outfitId:wornOutfit.outfitId,name:wornOutfit.name,styleTags:[...wornOutfit.styleTags],giftedByPlayer:Boolean(wornInstance.giftedByPlayer),lastWorn:wornInstance.lastWorn ?? wornInstance.givenDay } : null },
     relationship:{ affection:state.affection, trust:state.trust, excitement:state.excitement, attachment:state.attachment, conflict:state.conflict, stress:state.relationshipStress },
     player:{ name:state.player?.name??"나", archetype:state.player?.archetypeName??"기본 캐릭터", appearanceRating:state.player?.appearanceRating??"보통", money:state.money, health:state.health, energy:state.energy, fatigue:state.fatigue, stress:state.stress, charm:state.charm, fashion:state.fashion, confidence:state.confidence, job:state.job.name, jobLevel:state.jobLevel },
-    recentActions, recentEvents, recentGifts, recentTemptations, recentConversation, recentInitiatedMessages:(state.initiatedMessages ?? []).slice(-3), importantMemories:getMemoryContext(state)
+    recentActions, recentEvents, recentGifts, recentTemptations, recentConversation, girlfriendLoan:structuredClone(state.girlfriendLoan??{borrowed:false,amount:0,day:null}), recentInitiatedMessages:(state.initiatedMessages ?? []).slice(-3), importantMemories:getMemoryContext(state)
   };
 }
 

@@ -15,6 +15,7 @@ import { createWorldState, validateWorldState } from "./world-map-manager.mjs";
 import { createScenarioState, normalizeGameMode, validateScenarioState } from "./scenario-state.mjs";
 import { createYujinSecretRouteState, validateYujinSecretRouteState } from "./yujin-secret-route.mjs";
 import { createWorldEncounterRoutes, validateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=3";
+import { createGirlfriendLoanState, validateGirlfriendLoanState } from "./girlfriend-loan-manager.mjs?v=1";
 
 export const MAX_DAY = 30;
 export const PHASE_COUNT = 4;
@@ -70,6 +71,7 @@ export function createInitialState(partner, random = Math.random, setup = {}) {
     initiatedMessages: [],
     conversationHistory: [],
     conversationSafety: {hostileCount:0,lastHostileDay:null},
+    girlfriendLoan:createGirlfriendLoanState(),
     yujinSecretRoute: createYujinSecretRouteState(),
     storyHistory: [],
     storyFlags: {},
@@ -156,6 +158,7 @@ export function validateState(value) {
   if (!Number.isInteger(value.appearanceSeed) || !validateCharacterAppearance(value.characterAppearance) || !Array.isArray(value.equippedVisualLayers) || typeof value.currentExpression !== "string" || typeof value.currentPose !== "string" || typeof value.currentOutfit !== "string" || typeof value.currentAccessory !== "string" || typeof value.currentBackground !== "string") return false;
   if (!validateJob(value.job) || !Number.isFinite(value.jobLevel) || !Number.isFinite(value.jobProgress) || !Array.isArray(value.economyLedger) || !validateAdvancedEconomyState(value.finance) || !Array.isArray(value.inventory) || !value.equipment || !value.girlfriendEquipment || !validateNpcs(value.npcs) || !Array.isArray(value.npcHistory) || !Array.isArray(value.temptationHistory) || !Array.isArray(value.rivalHistory) || !validateMemories(value.memories) || !Array.isArray(value.initiatedMessages) || !Array.isArray(value.conversationHistory) || !validateInvestmentState(value.investment) || !validateLotteryState(value.lottery)) return false;
   if (!Array.isArray(value.logs) || !Array.isArray(value.choices) || !value.situationEventStates || !value.futureEventWeights || !Array.isArray(value.microEventHistory) || !value.eventRuntime || !value.settings) return false;
+  if (!validateGirlfriendLoanState(value.girlfriendLoan)) return false;
   if (!Array.isArray(value.storyHistory) || !value.storyFlags || typeof value.storyFlags !== "object" || !Number.isFinite(value.futureScore) || (value.pendingStoryId !== null && typeof value.pendingStoryId !== "string") || !Array.isArray(value.cgCollection) || !Array.isArray(value.videoCollection)) return false;
   if (!validateHiddenRouteState(value.hiddenRoute)) return false;
   if (!validateYujinSecretRouteState(value.yujinSecretRoute)) return false;

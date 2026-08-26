@@ -1,4 +1,4 @@
-import { validateState } from "./game-core.mjs?v=13";
+import { validateState } from "./game-core.mjs?v=14";
 import { migrateNpcRoster } from "./npc-manager.mjs?v=2";
 import { migrateHeroineProfile } from "./girlfriend-manager.mjs?v=6";
 import { migrateInvestmentState } from "./investment-manager.mjs?v=2";
@@ -14,6 +14,7 @@ import { migrateWorldState } from "./world-map-manager.mjs";
 import { migrateScenarioState, normalizeGameMode } from "./scenario-state.mjs";
 import { migrateYujinSecretRouteState } from "./yujin-secret-route.mjs";
 import { migrateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=3";
+import { migrateGirlfriendLoanState } from "./girlfriend-loan-manager.mjs?v=1";
 
 export class SaveManager {
   static key = "today-day-one.save.v1";
@@ -63,6 +64,7 @@ export class SaveManager {
       parsed.cgCollection ??= [];
       parsed.videoCollection ??= [];
       parsed.conversationSafety ??= {hostileCount:0,lastHostileDay:null};
+      parsed.girlfriendLoan = migrateGirlfriendLoanState(parsed.girlfriendLoan);
       parsed.yujinSecretRoute = migrateYujinSecretRouteState(parsed.yujinSecretRoute);
       parsed.situationEventStates ??= {};
       parsed.futureEventWeights ??= {};

@@ -11,8 +11,8 @@ export const ACTIONS = {
     { id:"morning-contact", icon:"💬", title:"다정하게 연락하기", desc:"좋은 아침 인사로 서로의 하루를 시작한다.", costLabel:"호감 +3 · 신뢰 +2", timeCost:1, fixedEffects:["affection","trust"], effects:{ affection:3, trust:2, energy:-3 }, tag:"연락" },
     { id:"morning-gym", icon:"🏃", title:"아침 운동", desc:"가볍게 뛰며 몸과 자신감을 관리한다.", costLabel:"건강 +3", timeCost:1, requirements:[{ stat:"energy", operator:">=", value:12, message:"체력 12 이상 필요" }], effects:{ health:3, charm:1, confidence:1, fatigue:4, energy:-3, stress:-1 }, tag:"자기관리" },
     { id:"sleep-in", icon:"🛌", title:"조금 더 자기", desc:"피로를 풀지만 출근 준비는 아슬아슬하다.", costLabel:"에너지 +3 · 피로 -3", timeCost:1, effects:{ energy:3, fatigue:-3, work:-1, stress:-1 }, tag:"휴식" },
-    { id:"early-work", icon:"☕", title:"일찍 출근하기", desc:"커피 한 잔과 함께 업무를 먼저 시작한다.", costLabel:"수입 +₩25,000", timeCost:1, effects:{ money:25000, work:8, energy:-8, fatigue:7, stress:8 }, tag:"성공" },
-    { id:"manager-feedback", icon:"🗣️", title:"상사와 1:1 피드백", desc:"업무 조언을 얻어 성장 방향을 다듬는다.", costLabel:"스트레스 +5", timeCost:1, effects:{ work:7, confidence:4, stress:5, energy:-4 }, tag:"성장" }
+    { id:"early-work", icon:"☕", title:"일찍 출근하기", desc:"커피 한 잔과 함께 업무를 먼저 시작한다.", costLabel:"수입 +₩25,000 · 업무능력 +1", timeCost:1, effects:{ money:25000, work:1, energy:-8, fatigue:7, stress:8 }, tag:"성공" },
+    { id:"manager-feedback", icon:"🗣️", title:"상사와 1:1 피드백", desc:"업무 조언을 얻어 성장 방향을 다듬는다.", costLabel:"업무능력 +1 · 스트레스 +10", timeCost:1, effects:{ work:1, confidence:1, stress:10, energy:-7 }, tag:"성장" }
   ],
   day: [
     { id:"day-idle", icon:"☁️", title:"아무것도 안 하기", desc:"점심시간 동안 조용히 쉬며 아무 행동도 하지 않는다.", costLabel:"변화 없음", timeCost:1, effects:{}, tag:"휴식" },
@@ -145,8 +145,8 @@ const PLAYER_JOB_ACTIONS = [
 PLAYER_JOB_ACTIONS.forEach(([phase,action])=>ACTIONS[phase].push({...action,weekdayOnly:true}));
 
 const ARCHETYPE_ACTIONS = [
-  ["evening",{id:"handsome-meet-friends",icon:"🧑‍🤝‍🧑",title:"친구들 만나기",desc:"오랜 친구들과 편하게 어울리며 기분을 푼다.",costLabel:"₩35,000",timeCost:1,archetypeIds:["handsome"],requirements:[{stat:"money",operator:">=",value:35000,message:"자산 ₩35,000 이상 필요"}],effects:{money:-35000,social:12,stress:-14,confidence:5},tag:"외모 특전"}],
-  ["evening",{id:"handsome-meet-female-friends",icon:"✨",title:"여자 사람 친구들 만나기",desc:"호감을 보이는 여자 사람 친구들과 어울린다. 연인의 신뢰가 흔들릴 수 있다.",costLabel:"신뢰 -18 · 위험",timeCost:1,archetypeIds:["handsome"],effects:{social:15,charm:8,confidence:6,trust:-18,affection:-10},tag:"유혹"}],
+  ["evening",{id:"handsome-meet-friends",icon:"🧑‍🤝‍🧑",title:"친구들 만나기",desc:"오랜 친구들과 편하게 어울리며 기분을 푼다.",costLabel:"사회성 +1 · 스트레스 -3",timeCost:1,archetypeIds:["handsome"],effects:{social:1,stress:-3,confidence:1},tag:"외모 특전"}],
+  ["evening",{id:"handsome-meet-female-friends",icon:"✨",title:"여자 사람 친구들 만나기",desc:"호감을 보이는 여자 사람 친구들과 어울린다. 연인의 신뢰가 흔들릴 수 있다.",costLabel:"신뢰 -24 · 호감 -24 · 갈등 +10",timeCost:1,archetypeIds:["handsome"],effects:{social:1,confidence:1,trust:-24,affection:-24,conflict:10},tag:"유혹"}],
   ["evening",{id:"wealthy-social-club",icon:"🥂",title:"프라이빗 사교 모임 가기",desc:"사업가와 투자자가 모이는 비공개 모임에서 인맥을 만든다.",costLabel:"₩180,000",timeCost:1,archetypeIds:["wealthy"],requirements:[{stat:"money",operator:">=",value:180000,message:"자산 ₩180,000 이상 필요"}],effects:{money:-180000,social:18,work:7,confidence:8},tag:"부자 특전"}],
   ["evening",{id:"wealthy-spend-relief",icon:"💎",title:"호화롭게 돈 쓰기",desc:"좋은 음식과 서비스를 마음껏 즐기며 스트레스를 푼다.",costLabel:"₩300,000 · 스트레스 -30",timeCost:1,archetypeIds:["wealthy"],requirements:[{stat:"money",operator:">=",value:300000,message:"자산 ₩300,000 이상 필요"}],effects:{money:-300000,stress:-30,fatigue:-8,confidence:8},tag:"부자 특전"}]
 ];

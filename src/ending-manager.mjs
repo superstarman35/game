@@ -34,6 +34,50 @@ export const ENDING_DEFINITIONS = [
   { id:"new-beginning", title:"새로운 시작", description:"30일의 선택은 끝났지만, 자신의 삶을 이해하는 새로운 여정이 시작됐다.", matches:() => true }
 ];
 
+const endingPlan=(category,conditionLabel,relatedEventIds=[],systemEvents=[])=>Object.freeze({category,conditionLabel,relatedEventIds:Object.freeze(relatedEventIds),systemEvents:Object.freeze(systemEvents)});
+
+export const ENDING_TOOL_PLANS = Object.freeze({
+  "hidden-escape":endingPlan("히든 루트","히든 루트 시작 + 떠나기 선택 + 스트레스 80 이상 / 건강 30 이하 / 자산 10만원 미만 / 부담 700 이상 중 하나",[],["히든 루트 시작","떠나기 선택","생활 붕괴 판정"]),
+  "hidden-role-reversal":endingPlan("히든 루트","히든 루트 시작 + 하은에게 도움받음 + 변화 450 이상 + 경계 400 이상",[],["히든 루트 도움 요청","하은의 역할 역전"]),
+  "hidden-mutual-life":endingPlan("히든 루트","떠나지 않음 + 변화 500 이상 + 경계 550 이상 + 의존 700 미만 + 안정 350 이상",[],["히든 루트 상호 회복","생활 경계 합의"]),
+  "hidden-dependent-love":endingPlan("히든 루트","떠나지 않음 + 의존 700 이상 또는 경계 300 미만",[],["히든 루트 대신 해결","의존 관계 누적"]),
+  "hidden-love-to-here":endingPlan("히든 루트","히든 루트를 시작했지만 위의 히든 엔딩 조건을 충족하지 못함",[],["히든 루트 최종 선택"]),
+  "betrayal-revealed":endingPlan("관계 파국","비밀 만남 또는 바람 선택 1회 이상 + 신뢰도 400 미만",["situation-coworker-private-drink","situation-second-secret-meeting","situation-phone-notification-seen","situation-caught-with-coworker"],["유혹 행동 · 비밀 선택"]),
+  "rival-chosen":endingPlan("관계 파국","라이벌의 여자친구 관심 75 이상 + 호감도 500 미만 + 신뢰도 500 미만",["situation-girlfriend-with-stranger","situation-her-ex-returns","situation-minho-reports-minjun-date-invitation"],["라이벌 압박 누적"]),
+  "economic-breakup":endingPlan("관계 파국","순자산 20만원 미만 + 갈등 50 이상",["situation-budget-date","situation-fine-dining-truth"],["생활비 결산","자산 하락"]),
+  "love-breakup":endingPlan("관계 파국","이별 선택 또는 호감도 350 미만 또는 신뢰도 250 미만",["situation-future-night-talk","situation-travel-big-fight"],["이별 선택","관계 수치 하락"]),
+  "investment-failure":endingPlan("경제","투자 손익 -20만원 이하",[],["스마트폰 · 투자","주식 매도 손익"]),
+  "lottery-reversal":endingPlan("경제","복권 누적 당첨금 50만원 이상",[],["스마트폰 · 복권","복권 당첨 기록"]),
+  "investment-success":endingPlan("경제","투자 손익 +20만원 이상",[],["스마트폰 · 투자","주식 매도 손익"]),
+  "wealthy-marriage":endingPlan("결혼","순자산 300만원 이상 + 호감도 650 이상 + 신뢰도 600 이상 + 미래 대화 미발생 또는 미래 점수 8 이상",["situation-future-night-talk","situation-promotion-relocation"],["자산 결산","미래 점수"]),
+  "happy-marriage":endingPlan("결혼","호감도 850 이상 + 신뢰도 800 이상 + 갈등 45 미만 + 미래 대화 미발생 또는 미래 점수 12 이상",["situation-future-night-talk","situation-first-trip","situation-parents-first-story"],["관계 수치 결산","미래 점수"]),
+  "love-marriage":endingPlan("결혼","호감도 820 이상 + 신뢰도 780 이상 + 미래 대화 미발생 또는 미래 점수 8 이상",["situation-future-night-talk","situation-meet-her-friends"],["관계 수치 결산","미래 점수"]),
+  "marriage-postponed":endingPlan("연애 지속","호감도·신뢰도 550 이상 + 결혼 의향 45 미만 또는 미래 대화 후 미래 점수 8 미만",["situation-future-night-talk","situation-promotion-relocation"],["여자친구 결혼 의향","미래 점수"]),
+  "long-romance":endingPlan("연애 지속","호감도 600 이상 + 신뢰도 600 이상",["situation-first-trip","situation-couple-item-shopping"],["관계 수치 결산"]),
+  "ennui":endingPlan("연애 지속","갈등 55 이상 또는 관계 스트레스 65 이상",["situation-travel-big-fight","situation-friend-advice-partner-contact-drop","situation-late-night-reconciliation"],["갈등 누적","관계 스트레스"]),
+  "new-beginning":endingPlan("기본","다른 엔딩이 선택되지 않았을 때 적용되는 기본 엔딩",[],["DAY 30 최종 결산"])
+});
+
+export const ENDING_VIDEO_SPEC = Object.freeze({format:"WebM",resolution:"1920×1080",duration:"8–20초",playback:"1회 재생 · 음성 및 엔딩 BGM 사용 가능",directory:"assets/endings/videos",posterDirectory:"assets/endings/posters"});
+
+export function getEndingVideoPlan(endingId){
+  return Object.freeze({status:"planned",assetPath:`${ENDING_VIDEO_SPEC.directory}/${endingId}.webm`,posterPath:`${ENDING_VIDEO_SPEC.posterDirectory}/${endingId}.webp`,...ENDING_VIDEO_SPEC});
+}
+
+export function getEndingToolEntries(state){
+  const selectedId=selectEnding(state).id;
+  return ENDING_DEFINITIONS.map((ending,index)=>{
+    let eligible=false;try{eligible=Boolean(ending.matches(state));}catch{eligible=false;}
+    const plan=ENDING_TOOL_PLANS[ending.id];
+    return {...ending,...plan,priority:index+1,eligible,selected:ending.id===selectedId,video:getEndingVideoPlan(ending.id)};
+  });
+}
+
+export function validateEndingToolPlans(plans=ENDING_TOOL_PLANS){
+  const ids=ENDING_DEFINITIONS.map(ending=>ending.id),videoPaths=ids.map(id=>getEndingVideoPlan(id).assetPath);
+  return Object.keys(plans).length===ids.length&&ids.every(id=>{const plan=plans[id];return plan&&typeof plan.category==="string"&&typeof plan.conditionLabel==="string"&&Array.isArray(plan.relatedEventIds)&&Array.isArray(plan.systemEvents);})&&new Set(videoPaths).size===ids.length;
+}
+
 export function validateEndingDefinitions(definitions = ENDING_DEFINITIONS) {
   const ids = new Set();
   return definitions.length === 19 && definitions.every(ending => typeof ending.id === "string" && !ids.has(ending.id) && ids.add(ending.id) && typeof ending.title === "string" && typeof ending.description === "string" && typeof ending.matches === "function");

@@ -2,6 +2,7 @@ import { applyEffects } from "./game-core.mjs";
 import { recordMemory } from "./memory-manager.mjs";
 import { SITUATION_EVENTS } from "./situation-events-data.mjs";
 import { combineChoiceEffects, getMbtiChoiceAdjustment } from "./event-choice-modifier.mjs";
+import { normalizeSubwaySituationEffects } from "./subway-event-effects.mjs?v=1";
 
 export function getSituationEvent(id){return SITUATION_EVENTS.find(event=>event.id===id)??null;}
 
@@ -37,7 +38,7 @@ export function resolveSituationEventChoice(state,event,choiceId) {
   const choice=event.choices.find(item=>item.id===choiceId);
   if(!choice)return null;
   const mbtiAdjustment=getMbtiChoiceAdjustment(state,choice);
-  const effects=combineChoiceEffects(choice.effects,mbtiAdjustment.effects);
+  const effects=normalizeSubwaySituationEffects(event,combineChoiceEffects(choice.effects,mbtiAdjustment.effects));
   applyEffects(state,effects);
   for(const [npcId,npcEffects] of Object.entries(choice.npcEffects??{})){
     const npc=(state.npcs??[]).find(item=>item.id===npcId);if(!npc)continue;
@@ -66,7 +67,7 @@ export function rollLocationSituationEvent(state,location,random=Math.random,eve
   const event=candidates.find(candidate=>random()<=candidate.probability);if(!event)return null;
   applyEffects(state,event.effects);activateSituationEvent(state,event);state.eventHistory??=[];
   const record={id:event.id,day:state.day,phase:state.phase,title:event.title,message:event.message,category:event.category,tensionLevel:event.tensionLevel,npcIds:[...(event.npcRequirements??[])],triggerReason:[`장소 입장: ${location.id}`],finalWeight:Math.round(event.probability*100),status:"ACTIVE"};
-  state.eventHistory.push(record);return {...event,record};
+  state.eventHistory.push(record);return {...event,record,triggerLocationId:location.id};
 }
 
 export function validateSituationEventState(state) {

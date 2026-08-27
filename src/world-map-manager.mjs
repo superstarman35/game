@@ -235,6 +235,21 @@ export function selectWorldTransport(world,transportId) {
   return {ok:true,option};
 }
 
+export function completeWorldFastTravel(world,map,destination,transportId,day) {
+  const option=TRANSPORT_OPTIONS.find(item=>item.id===transportId);
+  if(!world||!map||!destination||!option?.fastTravel)return {ok:false,reason:"빠른 이동 정보를 확인할 수 없습니다."};
+  world.cityId=map.cityId;world.districtId=map.id;world.x=destination.x;world.y=destination.y;
+  world.discoveredLocations??=[];
+  if(!world.discoveredLocations.includes(destination.id))world.discoveredLocations.push(destination.id);
+  world.travelHistory??=[];
+  world.travelHistory.push({cityId:map.cityId,districtId:map.id,transport:option.id,destinationId:destination.id,day});
+  if(world.travelHistory.length>40)world.travelHistory.shift();
+  const switchedToWalk=option.id==="subway";
+  world.transport=switchedToWalk?"walk":option.id;
+  world.transportConfirmed=true;
+  return {ok:true,option,map,destination,switchedToWalk};
+}
+
 export function travelToCity(world,cityId,homeDistrictId="dongsu") {
   const districtId=cityId==="busan"?"busan":homeDistrictId;
   const map=WORLD_MAPS[districtId];

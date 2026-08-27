@@ -45,6 +45,7 @@ export const NPC_ASSETS = {
   "love-advisor":"assets/npcs/love-advisor.png",
   "hospital-nurse":"assets/npcs/hospital-nurse.png",
   "male-rival":"assets/npcs/male-rival-clean.png",
+  "anonymous-extortionist":"assets/npcs/anonymous-extortionist-2d.png",
   "player-ex":"assets/heroines/yuri/yuri-ex-girlfriend-2d.png?v=2"
 };
 

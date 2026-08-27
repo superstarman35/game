@@ -1,6 +1,6 @@
 import { validateGirlfriend } from "./girlfriend-manager.mjs?v=7";
 import { generateJob, getJobStartingState, validateJob } from "./jobs-data.mjs?v=6";
-import { generateNpcs, validateNpcs } from "./npc-manager.mjs?v=3";
+import { generateNpcs, validateNpcs } from "./npc-manager.mjs?v=4";
 import { validateMemories } from "./memory-manager.mjs";
 import { createInvestmentState, validateInvestmentState } from "./investment-manager.mjs?v=2";
 import { createLotteryState, validateLotteryState } from "./lottery-manager.mjs";
@@ -14,7 +14,7 @@ import { applyPlayerArchetype, createPlayerProfile, validatePlayerProfile } from
 import { createWorldState, validateWorldState } from "./world-map-manager.mjs";
 import { createScenarioState, normalizeGameMode, validateScenarioState } from "./scenario-state.mjs";
 import { createYujinSecretRouteState, validateYujinSecretRouteState } from "./yujin-secret-route.mjs";
-import { createWorldEncounterRoutes, validateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=3";
+import { createWorldEncounterRoutes, validateWorldEncounterRoutes } from "./world-encounter-manager.mjs?v=5";
 import { createGirlfriendLoanState, validateGirlfriendLoanState } from "./girlfriend-loan-manager.mjs?v=1";
 
 export const MAX_DAY = 30;

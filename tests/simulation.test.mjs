@@ -61,11 +61,12 @@ import { DEFAULT_GIRLFRIEND_VISUAL_ID, getGirlfriendVisual, getGirlfriendVisualA
 import { createWorldState, discoverLocation, getNearbyLocation, getPlayerHomeProfile, getRoadCells, isRoadCell, isWorldLocationOpen, migrateWorldState, moveWorldPlayer, PLAYER_HOME_PROFILES, selectWorldTransport, TRANSPORT_OPTIONS, travelToCity, validateWorldState, WORLD_ATLAS, WORLD_MAPS } from "../src/world-map-manager.mjs";
 import { GAME_MODES, getGameModeConfig, isContentAvailableForMode, validateScenarioState } from "../src/scenario-state.mjs";
 import { getMapLocationAsset, MAP_LOCATION_ASSETS, validateMapLocationAssets } from "../src/map-location-assets.mjs";
-import { JAEMIN_ENCOUNTER_CHANCE, JAEMIN_QUIZZES, JUNHO_ENCOUNTER_CHANCE, JUNHO_PARTNER_INSIGHTS, MINJUN_CONCERNS, MINJUN_ENCOUNTER_CHANCE, getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, validateWorldEncounterRoutes, WORLD_REPEAT_ENCOUNTER_CHANCE } from "../src/world-encounter-manager.mjs";
+import { EXTORTION_ENCOUNTER_CHANCE, JAEMIN_ENCOUNTER_CHANCE, JAEMIN_QUIZZES, JUNHO_ENCOUNTER_CHANCE, JUNHO_PARTNER_INSIGHTS, MINJUN_CONCERNS, MINJUN_ENCOUNTER_CHANCE, getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, validateWorldEncounterRoutes, WORLD_REPEAT_ENCOUNTER_CHANCE } from "../src/world-encounter-manager.mjs";
 import { appendYujinConversationTurn, completeYujinRooftopMeeting, getPendingYujinRooftopInvitation, isYujinRooftopInvitationReady, YUJIN_MESSAGE_CORPUS, YUJIN_ROOFTOP_EVENT_IMAGE, YUJIN_ROOFTOP_INVITATION, YUJIN_ROOFTOP_LOCATION_ID, YUJIN_ROOFTOP_START_MINUTES } from "../src/yujin-secret-route.mjs";
 
 const coreActionResultAssetIds=["coworker-lunch","dinner-date","early-sleep","focused-work","handsome-meet-female-friends","handsome-meet-friends","lunch-date","manager-feedback","morning-contact","morning-gym","overtime","sleep-in","stock-check","temptation-secret"];
 assert.deepEqual(ACTIONS.day.find(action=>action.id==="lunch-date").effects,{money:-38000,affection:5,trust:5,stress:-1,energy:-3});
+assert.deepEqual(ACTIONS.day.find(action=>action.id==="coworker-lunch").effects,{money:-14000,social:1,energy:-1,affection:-2});
 assert.deepEqual(ACTIONS.morning.find(action=>action.id==="early-work").effects,{money:25000,work:1,energy:-8,fatigue:7,stress:8});
 assert.deepEqual(ACTIONS.evening.find(action=>action.id==="handsome-meet-friends").effects,{money:-80000,social:1,stress:-3,confidence:1});
 assert.deepEqual(ACTIONS.evening.find(action=>action.id==="handsome-meet-female-friends").effects,{money:-160000,social:1,confidence:1,trust:-24,affection:-24,conflict:10});
@@ -99,6 +100,11 @@ assert.deepEqual(getVisibleActionEffects({npcInterest:6,npcTrust:6,trust:-30,aff
   {key:"affection",label:"호감도",value:-30},
   {key:"conflict",label:"갈등",value:12}
 ]);
+assert.deepEqual(getVisibleActionEffects({minhoAffection:1,dohyunAffection:1}),[
+  {key:"minhoAffection",label:"민호 호감도",value:1},
+  {key:"dohyunAffection",label:"도현 호감도",value:1}
+]);
+assert.deepEqual(getVisibleActionEffects({energy:-1}),[{key:"energy",label:"체력",value:-1}]);
 console.log(`✓ 활동 결과 이미지 ${Object.keys(ACTION_RESULT_ASSETS).length}종·핵심 효과 표시 매핑 검증 통과`);
 
 assert.ok(Object.values(ACTION_RESULT_VIDEOS).flat().every(asset=>existsSync(asset)));
@@ -326,6 +332,35 @@ const yujinEncounter=rollRepeatWorldEncounter(yuriState,{id:"night-food",categor
 assert.equal(yujinEncounter.npcId,"female-coworker");
 const yujinBefore=yuriState.npcs.find(npc=>npc.id==="female-coworker").affection;
 assert.equal(resolveRepeatWorldEncounter(yuriState,yujinEncounter,"coworker-talk").npc.affection,yujinBefore+5);
+assert.equal(EXTORTION_ENCOUNTER_CHANCE,.2);
+for(const [mapId,locationId] of [["jamsil","jamsil-station"],["myeongdong","myeongdong-station"]]){
+  const station=WORLD_MAPS[mapId].locations.find(location=>location.id===locationId);
+  assert.equal(rollRepeatWorldEncounter(yuriState,station,19*60,()=>.2001),null);
+  const threat=rollRepeatWorldEncounter(yuriState,station,19*60,()=>.2);
+  assert.equal(threat.npcId,"anonymous-extortionist");
+  assert.deepEqual(threat.choices.map(choice=>choice.label),["얻어맞을래?","곱게 돈줄래?"]);
+}
+const fightState=createInitialState(createGirlfriendFromProfile("haeun",()=>.5),()=>.5,{mode:GAME_MODES.FREE_ROMANCE});
+Object.assign(fightState,{health:80,energy:80,trust:500,affection:500,stress:20,money:1000000});
+const jamsilStation=WORLD_MAPS.jamsil.locations.find(location=>location.id==="jamsil-station");
+const fightThreat=rollRepeatWorldEncounter(fightState,jamsilStation,19*60,()=>0);
+const fightResult=resolveRepeatWorldEncounter(fightState,fightThreat,"take-beating");
+assert.deepEqual(fightResult.playerEffects,{health:-20,energy:-20,trust:-20,affection:-20,stress:30});
+assert.deepEqual([fightState.health,fightState.energy,fightState.trust,fightState.affection,fightState.stress,fightState.money],[60,60,480,480,50,1000000]);
+assert.equal(fightState.npcHistory.length,0);
+const payState=createInitialState(createGirlfriendFromProfile("haeun",()=>.5),()=>.5,{mode:GAME_MODES.FREE_ROMANCE});
+Object.assign(payState,{trust:500,affection:500,stress:20,money:1000000});
+const myeongdongStation=WORLD_MAPS.myeongdong.locations.find(location=>location.id==="myeongdong-station");
+const payThreat=rollRepeatWorldEncounter(payState,myeongdongStation,19*60,()=>0);
+const payResult=resolveRepeatWorldEncounter(payState,payThreat,"pay-quietly");
+assert.deepEqual(payResult.playerEffects,{trust:-30,affection:-30,stress:-10});
+assert.equal(payResult.moneyLoss,100000);
+assert.deepEqual([payState.trust,payState.affection,payState.stress,payState.money],[470,470,10,900000]);
+assert.deepEqual(payState.economyLedger.at(-1),{day:payState.day,category:"extortion",label:"명동역 협박 피해",amount:-100000});
+assert.equal(payState.worldEncounterHistory.at(-1).moneyLoss,100000);
+assert.match(gameSource,/불특정 인원 · 역 앞 협박/);
+assert.match(gameSource,/\["jamsil-station","myeongdong-station"\]/);
+console.log("✓ 잠실역·명동역 20% 협박 조우 및 선택별 피해 검증 통과");
 assert.equal(MINJUN_ENCOUNTER_CHANCE,.5);
 assert.equal(JAEMIN_ENCOUNTER_CHANCE,.3);
 assert.equal(JUNHO_ENCOUNTER_CHANCE,.3);
@@ -341,14 +376,19 @@ assert.equal(minjunRouteState.worldEncounterRoutes.minjun.completed,true);
 assert.equal(minjunRouteState.npcs.find(npc=>npc.id==="male-rival").storyState,"haeun-boundary-closed");
 assert.equal(minjunRouteState.npcs.find(npc=>npc.id==="male-rival").active,false);
 assert.equal(rollRepeatWorldEncounter(minjunRouteState,lakeLocation,19*60,()=>0),null);
-assert.equal(Object.keys(JAEMIN_QUIZZES).length,3);
+assert.equal(Object.keys(JAEMIN_QUIZZES).length,5);
 assert.ok(Object.values(JAEMIN_QUIZZES).every(questions=>questions.length===5));
 const jaeminRouteState=createInitialState(createGirlfriendFromProfile("haeun",()=>.5),()=>.5,{mode:GAME_MODES.FREE_ROMANCE});
 let helpOffer="";
-for(const locationId of ["prime-gym","boxing-studio","protein-cafe"]){const location=WORLD_MAPS.seongsu.locations.find(item=>item.id===locationId);for(let index=0;index<5;index+=1){const encounter=rollRepeatWorldEncounter(jaeminRouteState,location,19*60,()=>0);assert.equal(encounter.npcId,"gym-trainer");const correct=encounter.choices.find(choice=>choice.correct);const result=resolveRepeatWorldEncounter(jaeminRouteState,encounter,correct.id);helpOffer ||= result.followUpMessage;}assert.equal(rollRepeatWorldEncounter(jaeminRouteState,location,19*60,()=>0),null);}
+const runningPark=WORLD_MAPS.seongsu.locations.find(item=>item.id==="running-park");
+assert.equal(rollRepeatWorldEncounter(jaeminRouteState,runningPark,18*60+59,()=>0),null);
+assert.equal(rollRepeatWorldEncounter(jaeminRouteState,runningPark,19*60,()=>.3001),null);
+for(const locationId of ["prime-gym","boxing-studio","protein-cafe","running-park","climbing-lab"]){const location=WORLD_MAPS.seongsu.locations.find(item=>item.id===locationId);for(let index=0;index<5;index+=1){const encounter=rollRepeatWorldEncounter(jaeminRouteState,location,19*60,()=>0);assert.equal(encounter.npcId,"gym-trainer");assert.ok(encounter.choices.every(choice=>choice.npcEffects.affection===1&&choice.npcEffects.trust===1));const correct=encounter.choices.find(choice=>choice.correct);const result=resolveRepeatWorldEncounter(jaeminRouteState,encounter,correct.id);assert.deepEqual(result.effects,{affection:1,trust:1});helpOffer ||= result.followUpMessage;}assert.equal(rollRepeatWorldEncounter(jaeminRouteState,location,19*60,()=>0),null);}
 assert.match(helpOffer,/헬스하러 오면/);
-assert.equal(jaeminRouteState.worldEncounterRoutes.jaemin.correctCount,15);
+assert.equal(jaeminRouteState.worldEncounterRoutes.jaemin.correctCount,25);
 assert.equal(jaeminRouteState.worldEncounterRoutes.jaemin.helpOffered,true);
+assert.equal(jaeminRouteState.worldEncounterRoutes.jaemin.answered["running-park"].length,5);
+assert.equal(jaeminRouteState.worldEncounterRoutes.jaemin.answered["climbing-lab"].length,5);
 assert.equal(JUNHO_PARTNER_INSIGHTS.length,10);
 const junhoRouteState=createInitialState(createGirlfriendFromProfile("haeun",()=>.5),()=>.5,{mode:GAME_MODES.FREE_ROMANCE});
 const neonClub=WORLD_MAPS.hongdae.locations.find(location=>location.id==="neon-club");
@@ -356,7 +396,7 @@ assert.equal(rollRepeatWorldEncounter(junhoRouteState,neonClub,19*60,()=>.3001),
 for(let index=0;index<JUNHO_PARTNER_INSIGHTS.length;index+=1){const encounter=rollRepeatWorldEncounter(junhoRouteState,neonClub,19*60,()=>0);assert.deepEqual(encounter.choices.map(choice=>choice.label),["고마워.","안 알려줘도 돼."]);resolveRepeatWorldEncounter(junhoRouteState,encounter,index%2?"decline":"thanks");}
 assert.equal(rollRepeatWorldEncounter(junhoRouteState,neonClub,19*60,()=>0),null);
 assert.equal(validateWorldEncounterRoutes(junhoRouteState.worldEncounterRoutes),true);
-console.log("✓ 민준 10단계 고민·재민 15개 운동 퀴즈·준호 10개 연인 정보 지도 조우 검증 통과");
+console.log("✓ 민준 10단계 고민·재민 5개 장소 25개 운동 퀴즈·준호 10개 연인 정보 지도 조우 검증 통과");
 assert.equal(getNightOutingContext(19*60,"하은").message,"하은이와 같이 데이트/외출을 나왔다.");
 assert.equal(getNightOutingContext(19*60,"유리").message,"유리와 같이 데이트/외출을 나왔다.");
 assert.equal(getNightOutingContext(22*60,"하은").message,"나혼자 외출 나왔다.");
@@ -692,6 +732,8 @@ assert.match(getNpcSprite("best-friend"),/best-friend\.png$/);
 assert.match(getNpcSprite("gym-trainer"),/gym-trainer\.png$/);
 assert.match(getNpcSprite("hospital-nurse"),/hospital-nurse\.png$/);
 assert.notEqual(getNpcSprite("hospital-nurse"),getNpcSprite("female-coworker"));
+assert.equal(getNpcSprite("anonymous-extortionist"),"assets/npcs/anonymous-extortionist-2d.png");
+assert.equal(existsSync(getNpcSprite("anonymous-extortionist")),true);
 assert.match(getNpcSprite("unknown-npc"),/male-support-clean\.png$/);
 assert.equal(resolveCharacterExpression({conflict:0,trust:500,stress:80,affection:500}).tone,"worried");
 assert.equal(resolveCharacterExpression({conflict:0,trust:500,stress:20,affection:800}).tone,"smile");
@@ -719,6 +761,8 @@ const completedMinjunRoster=structuredClone(generatedNpcs);Object.assign(complet
 assert.equal(migrateNpcRoster(completedMinjunRoster,()=>.5).find(npc=>npc.id==="male-rival").active,false);
 const inactiveMinhoRoster=structuredClone(generatedNpcs);inactiveMinhoRoster.find(npc=>npc.id==="office-best-male").active=false;
 assert.equal(migrateNpcRoster(inactiveMinhoRoster,()=>.5).find(npc=>npc.id==="office-best-male").active,true);
+const inactiveDohyunRoster=structuredClone(generatedNpcs);inactiveDohyunRoster.find(npc=>npc.id==="office-partner").active=false;
+assert.equal(migrateNpcRoster(inactiveDohyunRoster,()=>.5).find(npc=>npc.id==="office-partner").active,true);
 assert.ok(NPC_SOCIAL_GRAPH.length>=12);
 assert.ok(NPC_SOCIAL_GRAPH.every(link=>NPC_ARCHETYPES.some(npc=>npc.id===link.from)&&NPC_ARCHETYPES.some(npc=>npc.id===link.to)));
 assert.ok(generatedNpcs.some(npc => npc.interestInPlayer > 0));
@@ -730,6 +774,14 @@ const npcActionResult = applyNpcActionEffects(npcRelationshipState, ACTIONS.even
 assert.equal(npcActionResult.npc.instanceId, coworkerNpc.instanceId);
 assert.ok(coworkerNpc.interestInPlayer > coworkerInterestBefore);
 assert.equal(npcRelationshipState.npcHistory.length, 1);
+const minhoNpc=npcRelationshipState.npcs.find(npc=>npc.id==="office-best-male"),dohyunNpc=npcRelationshipState.npcs.find(npc=>npc.id==="office-partner");
+const minhoAffectionBefore=minhoNpc.affection,dohyunAffectionBefore=dohyunNpc.affection;
+const coworkerLunchNpcResult=applyNpcActionEffects(npcRelationshipState,ACTIONS.day.find(action=>action.id==="coworker-lunch"));
+assert.deepEqual(coworkerLunchNpcResult.npcs.map(npc=>npc.name),["민호","도현"]);
+assert.deepEqual(coworkerLunchNpcResult.displayEffects,{minhoAffection:1,dohyunAffection:1});
+assert.equal(minhoNpc.affection,minhoAffectionBefore+1);
+assert.equal(dohyunNpc.affection,dohyunAffectionBefore+1);
+assert.equal(npcRelationshipState.npcHistory.length,3);
 assert.equal(applyNpcActionEffects(npcRelationshipState, ACTIONS.night.find(action => action.id === "early-sleep")), null);
 const leadNpc = npcRelationshipState.npcs.find(npc => npc.id === "team-lead");
 const leadTrustBefore = leadNpc.trust;

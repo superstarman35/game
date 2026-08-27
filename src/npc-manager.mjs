@@ -1,10 +1,10 @@
-import { NPC_ACTION_RULES, NPC_ARCHETYPES } from "./npcs-data.mjs";
+import { NPC_ACTION_RULES, NPC_ARCHETYPES } from "./npcs-data.mjs?v=2";
 import { recordMemory } from "./memory-manager.mjs";
 
 const randomInt = (random, min, max) => min + Math.floor(random() * (max - min + 1));
 const ACTIVE_QUOTAS = { office:5, friend:3, rival:2, life:4 };
 export const FIXED_ACQUAINTANCE_NPC_IDS = Object.freeze(["male-rival","gym-trainer","drinking-friend"]);
-const CORE_IDS = new Set(["female-coworker","team-lead","office-best-male","best-friend","player-ex",...FIXED_ACQUAINTANCE_NPC_IDS]);
+const CORE_IDS = new Set(["female-coworker","team-lead","office-best-male","office-partner","best-friend","player-ex",...FIXED_ACQUAINTANCE_NPC_IDS]);
 
 function selectActiveIds(random) {
   const selected=new Set(CORE_IDS);
@@ -54,7 +54,7 @@ export function migrateNpcRoster(npcs, random = Math.random) {
       storyTags:[...character.storyTags],
       links:[...character.links],
       instanceId:previous.instanceId || character.instanceId,
-      active:["player-ex","office-best-male"].includes(character.id)||FIXED_ACQUAINTANCE_NPC_IDS.includes(character.id)&&previous.storyState!=="haeun-boundary-closed" ? true : typeof previous.active === "boolean" ? previous.active : true,
+      active:["player-ex","office-best-male","office-partner"].includes(character.id)||FIXED_ACQUAINTANCE_NPC_IDS.includes(character.id)&&previous.storyState!=="haeun-boundary-closed" ? true : typeof previous.active === "boolean" ? previous.active : true,
       storyState:previous.storyState ?? "available"
     };
   });
@@ -67,16 +67,27 @@ export function validateNpcs(npcs) {
 }
 
 export function applyNpcActionEffects(state, action) {
-  const rule=NPC_ACTION_RULES.find(entry=>entry.actionId===action.id);
-  if (!rule) return null;
-  const character=(state.npcs ?? []).find(entry=>entry.id===rule.npcId && entry.active !== false);
-  if (!character) return null;
-  for (const [key,amount] of Object.entries(rule.effects)) character[key]=Math.max(0,Math.min(100,(character[key] ?? 0)+amount));
+  const rules=NPC_ACTION_RULES.filter(entry=>entry.actionId===action.id);
+  if (!rules.length) return null;
   state.npcHistory ??=[];
-  const record={ day:state.day,phase:state.phase,actionId:action.id,npcId:character.instanceId,effects:{...rule.effects} };
-  state.npcHistory.push(record);
-  recordMemory(state,{type:"npc",summary:`${character.name} · ${action.title}`,importance:2,tags:["NPC",character.id,action.tag]});
-  return { npc:character,record };
+  const results=[],displayEffects={};
+  for (const rule of rules) {
+    const character=(state.npcs ?? []).find(entry=>entry.id===rule.npcId && entry.active !== false);
+    if (!character) continue;
+    const applied={};
+    for (const [key,amount] of Object.entries(rule.effects)) {
+      const before=character[key] ?? 0;
+      character[key]=Math.max(0,Math.min(100,before+amount));
+      applied[key]=character[key]-before;
+    }
+    const record={ day:state.day,phase:state.phase,actionId:action.id,npcId:character.instanceId,effects:applied };
+    state.npcHistory.push(record);
+    recordMemory(state,{type:"npc",summary:`${character.name} · ${action.title}`,importance:2,tags:["NPC",character.id,action.tag]});
+    if(rule.displayEffectKey)displayEffects[rule.displayEffectKey]=(displayEffects[rule.displayEffectKey]??0)+(applied.affection??0);
+    results.push({npc:character,record});
+  }
+  if(!results.length)return null;
+  return {npc:results[0].npc,record:results[0].record,npcs:results.map(result=>result.npc),records:results.map(result=>result.record),displayEffects};
 }
 
 export function getNpcRelationshipStatus(character) {

@@ -99,12 +99,14 @@ export const ACTION_EFFECT_LABELS = Object.freeze({
   social: "사회성",
   stress: "스트레스",
   fatigue: "피로",
-  energy: "에너지",
+  energy: "체력",
   health: "건강",
   charm: "매력",
   fashion: "패션",
   npcInterest: "상대 관심도",
   npcTrust: "상대 신뢰",
+  minhoAffection: "민호 호감도",
+  dohyunAffection: "도현 호감도",
   conflict: "갈등"
 });
 

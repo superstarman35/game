@@ -42,7 +42,8 @@ export const NPC_ARCHETYPES = [
 export const NPC_SOCIAL_GRAPH = NPC_ARCHETYPES.flatMap(character => character.links.map(targetId => ({ from:character.id,to:targetId,type:character.relationshipType === "ex" ? "ex" : character.category === "office" ? "coworker" : character.category === "friend" ? "friend" : "acquaintance" })));
 
 export const NPC_ACTION_RULES = [
-  { actionId:"coworker-lunch", npcId:"female-coworker", effects:{ affection:8, trust:5, interestInPlayer:3 } },
+  { actionId:"coworker-lunch", npcId:"office-best-male", effects:{ affection:1 }, displayEffectKey:"minhoAffection" },
+  { actionId:"coworker-lunch", npcId:"office-partner", effects:{ affection:1 }, displayEffectKey:"dohyunAffection" },
   { actionId:"coworker-drinks", npcId:"female-coworker", effects:{ affection:12, trust:3, interestInPlayer:10 } },
   { actionId:"focused-work", npcId:"team-lead", effects:{ affection:3, trust:7 } },
   { actionId:"early-work", npcId:"team-lead", effects:{ affection:2, trust:5 } },

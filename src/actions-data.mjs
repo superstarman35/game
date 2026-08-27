@@ -18,7 +18,7 @@ export const ACTIONS = {
     { id:"day-idle", icon:"☁️", title:"아무것도 안 하기", desc:"점심시간 동안 조용히 쉬며 아무 행동도 하지 않는다.", costLabel:"변화 없음", timeCost:1, effects:{}, tag:"휴식" },
     { id:"focused-work", icon:"💼", title:"업무에 집중하기", desc:"성과를 내고 수입과 능력을 높인다.", costLabel:"수입 +₩45,000", timeCost:1, effects:{ money:45000, work:10, energy:-10, fatigue:9, stress:13, affection:-4 }, tag:"성공" },
     { id:"lunch-date", icon:"🍝", title:"연인과 점심", desc:"잠깐이라도 얼굴을 보며 함께 식사한다.", costLabel:"₩38,000", timeCost:1, requirements:[{ stat:"money", operator:">=", value:38000, message:"자산 ₩38,000 이상 필요" }], effects:{ money:-38000, affection:5, trust:5, stress:-1 }, tag:"데이트" },
-    { id:"coworker-lunch", icon:"👥", title:"동료와 점심", desc:"회사 사람들과 가까워지고 정보를 얻는다.", costLabel:"₩14,000", timeCost:1, effects:{ money:-14000, social:9, work:4, affection:-2 }, tag:"인간관계" },
+    { id:"coworker-lunch", icon:"👥", title:"동료와 점심", desc:"민호, 도현과 점심을 먹으며 직장 동료로서 가까워진다.", costLabel:"₩14,000 · 사회성 +1", timeCost:1, effects:{ money:-14000, social:1, energy:-1, affection:-2 }, tag:"인간관계" },
     { id:"stock-check", icon:"📈", title:"주식 확인하기", desc:"변동성 있는 시장에 작은 승부를 건다.", costLabel:"위험", timeCost:1, random:true, effects:{ stress:5 }, tag:"투자" }
   ],
   evening: [

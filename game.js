@@ -1,5 +1,5 @@
-import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=15";
-import { SaveManager } from "./src/save-manager.mjs?v=19";
+import { advanceTime, applyEffects, clamp, createInitialState, determineEnding } from "./src/game-core.mjs?v=17";
+import { SaveManager } from "./src/save-manager.mjs?v=21";
 import { createGirlfriendFromProfile, generateGirlfriend, getVisibleTraitRows, observePersonality, rerollGirlfriendPersonality } from "./src/girlfriend-manager.mjs?v=8";
 import { getEventDiagnostics, getRuntimeEventDefinitions, rollRuntimeEvent } from "./src/event-manager.mjs?v=10";
 import { SITUATION_EVENTS } from "./src/situation-events-data.mjs?v=9";
@@ -8,7 +8,7 @@ import { EventRuntimeManager } from "./src/event-runtime-manager.mjs?v=4";
 import { getMicroEventDiagnostics, rollMicroEvents } from "./src/micro-event-manager.mjs?v=5";
 import { auditEventSystems } from "./src/event-audit.mjs?v=4";
 import { EVENT_DEFINITIONS } from "./src/events-data.mjs?v=5";
-import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=17";
+import { ACTIONS as actions, PHASES as phases } from "./src/actions-data.mjs?v=18";
 import { getActionAvailability, getWeekdayName, isActionVisible, isWeekend } from "./src/action-manager.mjs?v=5";
 import { calculateActionEffects } from "./src/consequence-manager.mjs?v=2";
 import { getRelationshipState } from "./src/relationship-manager.mjs";
@@ -17,7 +17,7 @@ import { appendTransaction, BOND_PURCHASE_AMOUNT, BOND_RETURN_RATE, BOND_TERM_DA
 import { acquireActionItem, addItem, equipGirlfriendOutfit, equipItem, getEffectiveAppearance, getEquipmentBonuses, getPurchaseQuote, purchaseItem } from "./src/inventory-manager.mjs?v=8";
 import { getItem, ITEMS } from "./src/items-data.mjs?v=7";
 import { giveGift } from "./src/gift-manager.mjs?v=7";
-import { applyNpcActionEffects, getNpcRelationshipStatus, isYujinSecretGirlfriend } from "./src/npc-manager.mjs?v=3";
+import { applyNpcActionEffects, getNpcRelationshipStatus, isYujinSecretGirlfriend } from "./src/npc-manager.mjs?v=4";
 import { getTemptationOpportunity, resolveTemptation, TEMPTATION_CHOICES } from "./src/temptation-manager.mjs?v=2";
 import { applyRivalPressure, calculateRivalRisk } from "./src/rival-manager.mjs";
 import { calculateBreakupRisk, evaluateBreakup } from "./src/conflict-manager.mjs";
@@ -37,7 +37,7 @@ import { recordMemory } from "./src/memory-manager.mjs";
 import { maybeGenerateInitiatedMessage } from "./src/initiated-message-manager.mjs?v=6";
 import { getWrappedFocusIndex } from "./src/ui-manager.mjs";
 import { getHeroineEventVideo, renderCharacter, resolveCharacterAccessory, resolveCharacterExpression, resolveCharacterOutfit, resolveCharacterPose } from "./src/ui/character-renderer.mjs?v=11";
-import { getBackgroundAsset, getGiftVehicleAsset, getNpcSprite } from "./src/assets/asset-manifest.mjs?v=14";
+import { getBackgroundAsset, getGiftVehicleAsset, getNpcSprite } from "./src/assets/asset-manifest.mjs?v=15";
 import { getAvailableStoryChoices, getStoryScene, resolveStoryChoice, selectNextStoryScene } from "./src/story-manager.mjs?v=8";
 import { STORY_SCENES } from "./src/story-data.mjs?v=3";
 import { createDaySnapshot, ensureNightState, formatNightTime, getDailyReport, getLateSleepEffects, NIGHT_END_MINUTES, resetForNextDay, setNightStartTime, spendNightTime } from "./src/night-manager.mjs?v=3";
@@ -46,18 +46,18 @@ import { preloadSceneAssets, resolvePhasePresentation, resolveStoryPresentation 
 import { createEventSceneSequence, createStoryReactionSequence, createStorySceneSequence, createTemptationReactionSequence, createTemptationSceneSequence, resolveInitialScenePresentation } from "./src/story-scene-controller.mjs?v=3";
 import { runDailyStoryDirector } from "./src/dynamic-story-director.mjs?v=2";
 import { HAEUN_SPECIAL_EVENT_OUTFIT, HEROINE_OUTFITS, HEROINE_PROFILES, getEquippedHeroineOutfit, isOutfitUnlocked } from "./src/heroine-data.mjs?v=17";
-import { NPC_SOCIAL_GRAPH } from "./src/npcs-data.mjs";
+import { NPC_SOCIAL_GRAPH } from "./src/npcs-data.mjs?v=2";
 import { GIRLFRIEND_JOBS } from "./src/girlfriend-jobs-data.mjs";
 import { generateJob, JOBS } from "./src/jobs-data.mjs?v=6";
 import { getGirlfriendVisual } from "./src/girlfriend-visual-data.mjs";
 import { createPlayerProfile, PLAYER_ARCHETYPES, sanitizePlayerNameInput } from "./src/player-profile-data.mjs?v=2";
 import { getRandomPlayerName } from "./src/player-names-data.mjs?v=1";
 import { GAME_MODES, getGameModeConfig } from "./src/scenario-state.mjs?v=2";
-import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=13";
+import { getActionResultAsset, getHighTrustActionResultAsset, getVisibleActionEffects } from "./src/action-result-assets.mjs?v=14";
 import { getActionResultVideo } from "./src/action-result-videos.mjs?v=2";
 import { discoverLocation, getNearbyLocation, getPlayerHomeProfile, getRoadCells, isWorldLocationOpen, moveWorldPlayer, selectWorldTransport, TRANSPORT_OPTIONS, travelToCity, WORLD_ATLAS, WORLD_MAPS } from "./src/world-map-manager.mjs?v=3";
 import { getMapLocationAsset } from "./src/map-location-assets.mjs";
-import { JAEMIN_ENCOUNTER_CHANCE, JUNHO_ENCOUNTER_CHANCE, MINJUN_ENCOUNTER_CHANCE, getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, WORLD_REPEAT_ENCOUNTER_CHANCE } from "./src/world-encounter-manager.mjs?v=3";
+import { EXTORTION_ENCOUNTER_CHANCE, JAEMIN_ENCOUNTER_CHANCE, JUNHO_ENCOUNTER_CHANCE, MINJUN_ENCOUNTER_CHANCE, getNightOutingContext, hasCompletedYuriReunion, resolveRepeatWorldEncounter, rollRepeatWorldEncounter, shouldShowPartnerAtWorldLocation, WORLD_REPEAT_ENCOUNTER_CHANCE } from "./src/world-encounter-manager.mjs?v=5";
 import { formatEventProbability, getEventProbabilitySummary } from "./src/event-display.mjs?v=1";
 import { appendYujinConversationTurn, completeYujinRooftopMeeting, getPendingYujinRooftopInvitation, getYujinMessageSuggestions, isYujinRooftopInvitationReady, migrateYujinSecretRouteState, YUJIN_MESSAGE_CORPUS, YUJIN_NPC_ID, YUJIN_ROOFTOP_EVENT_IMAGE, YUJIN_ROOFTOP_INVITATION, YUJIN_ROOFTOP_LOCATION_ID, YUJIN_ROOFTOP_START_MINUTES } from "./src/yujin-secret-route.mjs?v=1";
 
@@ -1211,13 +1211,13 @@ function getWorldEventImage(map,event=null,location=null){return event?.image?.i
 function getEveningPartnerPortrait(){if(!shouldShowPartnerAtWorldLocation(ensureNightState(state).minutes))return "";return state.partner?.heroineId==="haeun"?HAEUN_PROFILE_PORTRAITS.calm:HEROINE_PROFILES.find(profile=>profile.id===state.partner?.heroineId)?.referenceImage??"";}
 function renderWorldEventMedia(image,title,characterImage="",characterName=state.partner?.name??"여자친구"){return `<div class="world-event-media"><img class="world-event-image" src="${escapeHtml(image)}" alt="${escapeHtml(title)}">${characterImage?`<img class="world-event-character" src="${escapeHtml(characterImage)}" alt="${escapeHtml(characterName)}">`:""}</div>`;}
 function finishWorldEventLayer(){$("#modal").classList.remove("world-event-active");closeModal();renderWorldMap();}
-function showWorldEventResult({map,image,title,response,effects={},effectLabels={},mbtiLabel="",characterImage="",characterName}){const labels={affection:"호감도",trust:"신뢰도",excitement:"흥미도",stress:"스트레스",energy:"에너지",fatigue:"피로",social:"사회성",confidence:"자신감",relationshipStress:"관계 스트레스",...effectLabels};const changes=Object.entries(effects).filter(([,value])=>Number(value)).map(([key,value])=>`<span class="${value>=0?"up":"down"}">${escapeHtml(labels[key]??key)} ${value>=0?"+":""}${Math.round(value)}</span>`).join("");$("#modalContent").innerHTML=`<article class="world-event-layer">${renderWorldEventMedia(image,title,characterImage,characterName)}<div class="world-event-copy"><span class="eyebrow">${escapeHtml(map.name)} · EVENT RESULT</span><h2>${escapeHtml(title)}</h2><p class="world-event-response">${escapeHtml(response)}</p>${mbtiLabel?`<p class="world-event-mbti">${escapeHtml(mbtiLabel)}에 맞는 반응이 추가로 반영됐습니다.</p>`:""}<div class="world-event-effects">${changes||"<span>특별한 수치 변화 없음</span>"}</div><button id="worldEventClose" class="primary-button" type="button">확인 · 지도로 돌아가기</button></div></article>`;$("#worldEventClose").addEventListener("click",finishWorldEventLayer);}
+function showWorldEventResult({map,image,title,response,effects={},effectLabels={},mbtiLabel="",characterImage="",characterName}){const labels={affection:"호감도",trust:"신뢰도",excitement:"흥미도",stress:"스트레스",health:"건강",energy:"에너지",fatigue:"피로",money:"보유 자산",social:"사회성",confidence:"자신감",relationshipStress:"관계 스트레스",...effectLabels};const changes=Object.entries(effects).filter(([,value])=>Number(value)).map(([key,value])=>{const amount=key==="money"?money(Math.abs(value)):Math.abs(Math.round(value));return `<span class="${value>=0?"up":"down"}">${escapeHtml(labels[key]??key)} ${value>=0?"+":"-"}${amount}</span>`;}).join("");$("#modalContent").innerHTML=`<article class="world-event-layer">${renderWorldEventMedia(image,title,characterImage,characterName)}<div class="world-event-copy"><span class="eyebrow">${escapeHtml(map.name)} · EVENT RESULT</span><h2>${escapeHtml(title)}</h2><p class="world-event-response">${escapeHtml(response)}</p>${mbtiLabel?`<p class="world-event-mbti">${escapeHtml(mbtiLabel)}에 맞는 반응이 추가로 반영됐습니다.</p>`:""}<div class="world-event-effects">${changes||"<span>특별한 수치 변화 없음</span>"}</div><button id="worldEventClose" class="primary-button" type="button">확인 · 지도로 돌아가기</button></div></article>`;$("#worldEventClose").addEventListener("click",finishWorldEventLayer);}
 
 function openRepeatWorldEncounter(map,location,encounter){
   const image=getWorldEventImage(map,null,location),characterImage=getNpcSprite(encounter.npcId);
   $("#modal").classList.add("world-event-active");
   $("#modalContent").innerHTML=`<article class="world-event-layer">${renderWorldEventMedia(image,encounter.title,characterImage,encounter.npcName)}<div class="world-event-copy"><span class="eyebrow">${escapeHtml(map.name)} · ${escapeHtml(formatEventProbability(encounter.chance??WORLD_REPEAT_ENCOUNTER_CHANCE))} ENCOUNTER</span><h2>${escapeHtml(encounter.title)}</h2><p>${escapeHtml(encounter.message)}</p><strong class="world-event-question">${escapeHtml(encounter.question)}</strong><div class="world-event-choices">${encounter.choices.map(choice=>`<button type="button" data-repeat-world-choice="${escapeHtml(choice.id)}">${escapeHtml(choice.label)}</button>`).join("")}</div></div></article>`;
-  document.querySelectorAll("[data-repeat-world-choice]").forEach(button=>button.addEventListener("click",()=>{const result=resolveRepeatWorldEncounter(state,encounter,button.dataset.repeatWorldChoice);if(!result)return;recordMemory(state,{type:"npc",summary:`${location.name}에서 ${result.npc.name}와 만남 · ${result.choice.label}`,importance:encounter.final?5:3,tags:["지도","반복 조우",location.id,result.npc.id]});state.logs.push({time:`DAY ${state.day} · ENCOUNTER`,text:`${location.name}에서 ${result.npc.name}와 만났다. · 호감도 ${result.effects.affection>=0?'+':''}${result.effects.affection??0}`});SaveManager.save(state);showWorldEventResult({map,image,title:encounter.title,response:[result.choice.response,result.followUpMessage].filter(Boolean).join(" "),effects:{npcAffection:result.effects.affection??0,npcTrust:result.effects.trust??0,npcInterest:result.effects.interestInPlayer??0},effectLabels:{npcAffection:`${result.npc.name} 호감도`,npcTrust:`${result.npc.name} 신뢰도`,npcInterest:`${result.npc.name}의 관심`},characterImage,characterName:result.npc.name});}));
+  document.querySelectorAll("[data-repeat-world-choice]").forEach(button=>button.addEventListener("click",()=>{const result=resolveRepeatWorldEncounter(state,encounter,button.dataset.repeatWorldChoice);if(!result)return;const extortion=encounter.routeType==="extortion";recordMemory(state,{type:extortion?"danger":"npc",summary:`${location.name}에서 ${result.npc.name}와 만남 · ${result.choice.label}`,importance:extortion?5:encounter.final?5:3,tags:["지도",extortion?"협박":"반복 조우",location.id,result.npc.id]});state.logs.push({time:`DAY ${state.day} · ${extortion?"DANGER":"ENCOUNTER"}`,text:extortion?`${location.name}에서 협박을 당했다. · ${result.choice.label}${result.moneyLoss?` · 피해 ${money(result.moneyLoss)}`:""}`:`${location.name}에서 ${result.npc.name}와 만났다. · 호감도 ${result.effects.affection>=0?'+':''}${result.effects.affection??0}`});SaveManager.save(state);const displayEffects=extortion?{...result.playerEffects,...(result.moneyLoss?{money:-result.moneyLoss}:{})}:{npcAffection:result.effects.affection??0,npcTrust:result.effects.trust??0,npcInterest:result.effects.interestInPlayer??0};const effectLabels=extortion?{energy:"체력",trust:"신뢰도",affection:"호감도",money:"보유 자산"}:{npcAffection:`${result.npc.name} 호감도`,npcTrust:`${result.npc.name} 신뢰도`,npcInterest:`${result.npc.name}의 관심`};showWorldEventResult({map,image,title:encounter.title,response:[result.choice.response,result.followUpMessage].filter(Boolean).join(" "),effects:displayEffects,effectLabels,characterImage,characterName:result.npc.name});}));
 }
 
 function openYujinRooftopMeeting(map,location) {
@@ -1434,8 +1434,8 @@ function applyAction() {
   if (acquiredItem) { const giftResult=action.autoGift?giveGift(state,acquiredItem.instanceId):null; toast(giftResult?`${giftResult.item.name} 선물 · “${giftResult.reaction.reaction}”`:`${getItem(acquiredItem.itemId).name} 획득${acquiredItem.equipped?' · 장착 완료':''}`); }
   const promotion = addJobProgress(state, action, fx);
   if (promotion) toast(`승진! 직업 레벨 ${promotion.level} · 수입 보정 상승`);
-  const npcResult = eventsUnlocked ? applyNpcActionEffects(state, action) : null;
-  if (npcResult) state.logs.push({time:`DAY ${state.day} · NPC`,text:`${npcResult.npc.name}와의 관계가 변했다.`});
+  const npcResult = (eventsUnlocked||action.id==="coworker-lunch") ? applyNpcActionEffects(state, action) : null;
+  if (npcResult) state.logs.push({time:`DAY ${state.day} · NPC`,text:`${npcResult.npcs.map(npc=>npc.name).join("·")}와의 관계가 변했다.`});
   const rivalResult = eventsUnlocked ? applyRivalPressure(state, action) : null;
   if (rivalResult?.record.delta > 0) state.logs.push({time:`DAY ${state.day} · RIVAL`,text:`${rivalResult.rival.name}의 접근 위험이 높아졌다.`});
   state.choices.push(action.tag); state.actionHistory.push({ day:state.day, phase:state.phase, actionId:action.id, tag:action.tag }); state.logs.push({time:`DAY ${state.day} · ${phase.time}`,text:`${action.title} — ${resultText(action)}`});
@@ -1466,7 +1466,7 @@ function applyAction() {
   SaveManager.save(state);
   const actionMessage = [resultText(action), ...microEvents.map(micro=>micro.text)].join(" ");
   render();
-  openActionResultModal(action, actionMessage, fx, () => {
+  openActionResultModal(action, actionMessage, {...fx,...(npcResult?.displayEffects??{})}, () => {
     const continueAfterSpecialEvent=()=>{if (breakup) showBreakup(breakup); else if (state.day > 30) showEnding(); else { const temptation=eventsUnlocked&&npcResult&&getTemptationOpportunity(state); const nextStory=selectNextStoryScene(state);const story=eventsUnlocked||isCampaignPrologueStory(nextStory?.id)?nextStory:null; if(story) openStoryScene(story); else if(temptation) openTemptation(temptation); else if(event) openEventScene(event); else if(["데이트","쇼핑"].includes(action.tag)) sound.playBgm("dateShopping",state.day); else if(action.tag==="유혹") sound.playBgm("crisis",state.day); }};
     if(unlockedSpecialOutfit)showSpecialOutfitEventPopup(continueAfterSpecialEvent);else continueAfterSpecialEvent();
   });
@@ -1594,7 +1594,7 @@ function renderGameTools() {
   }else if(gameToolsTab==="events"){
     const groups=SITUATION_EVENTS.reduce((result,event)=>{(result[event.categoryLabel]??=[]).push(event);return result;},{});
     const invitation=getPendingLateNightInvitation(state),invitationStatus=invitation?"메시지 도착":state.nightState?.lateNightInvitation?.status==="completed"?"완료":state.day>=LATE_NIGHT_INVITATION_MIN_DAY?"발생 가능":"DAY 6 잠금";
-    content.innerHTML=`<div class="game-tools-intro"><b>전체 이벤트 · 발생 확률</b><span>자유모드 이벤트는 DAY 4부터 조건을 충족할 때 판정되며 하루에 최대 1개만 발생합니다. 아래 확률은 각 판정 기회당 기본 확률입니다.</span></div>${yuriEvent?`<section class="tools-event-group tools-featured-event"><h3>특별 이벤트 <span>2</span></h3><button type="button" class="tools-list-row" data-tools-yuri-event="${yuriEvent.id}"><span><b>전여자친구 유리</b><small>첫 재회 1회 · 카페 방문당 ${formatEventProbability(yuriEvent.probability)} · 이후 카페 모퉁이 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} 반복 조우</small></span><em>${formatEventProbability(yuriEvent.probability)}</em></button><div class="tools-list-row"><span><b>직장 동료 유진 · 심야 포차거리</b><small>22:00 이후 심야 포차거리 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} · 선택에 따라 NPC 관계 상승</small></span><em>${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)}</em></div></section>`:""}<section class="tools-event-group"><h3>심야 메시지 이벤트 <span>1</span></h3><button type="button" class="tools-list-row" data-tools-late-invitation><span><b>보고 싶어 · 늦은 밤의 초대</b><small>DAY ${LATE_NIGHT_INVITATION_MIN_DAY}+ · 22:00 이후 · 하루 1회 판정 · ${escapeHtml(invitationStatus)}</small></span><em>${formatEventProbability(LATE_NIGHT_INVITATION_CHANCE)}</em></button></section>${Object.entries(groups).map(([label,events])=>`<section class="tools-event-group"><h3>${escapeHtml(label)} <span>${events.length}</span></h3>${events.map(event=>`<button type="button" class="tools-list-row" data-tools-event="${event.id}" aria-label="${escapeHtml(event.title)} · ${getEventProbabilitySummary(event)}"><span><b>${escapeHtml(event.title)}</b><small>${event.conditionLabel?`조건: ${escapeHtml(event.conditionLabel)} · `:""}${getEventProbabilitySummary(event)} · DAY ${event.dayRange?.[0]??"-"}–${event.dayRange?.[1]??"-"} · ${event.repeatable===false?"1회 한정":"반복 가능"}</small></span><em>${formatEventProbability(event.probability)}</em></button>`).join("")}</section>`).join("")}`;
+    content.innerHTML=`<div class="game-tools-intro"><b>전체 이벤트 · 발생 확률</b><span>자유모드 이벤트는 DAY 4부터 조건을 충족할 때 판정되며 하루에 최대 1개만 발생합니다. 아래 확률은 각 판정 기회당 기본 확률입니다.</span></div>${yuriEvent?`<section class="tools-event-group tools-featured-event"><h3>특별 이벤트 <span>3</span></h3><button type="button" class="tools-list-row" data-tools-yuri-event="${yuriEvent.id}"><span><b>전여자친구 유리</b><small>첫 재회 1회 · 카페 방문당 ${formatEventProbability(yuriEvent.probability)} · 이후 카페 모퉁이 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} 반복 조우</small></span><em>${formatEventProbability(yuriEvent.probability)}</em></button><div class="tools-list-row"><span><b>직장 동료 유진 · 심야 포차거리</b><small>22:00 이후 심야 포차거리 방문당 ${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)} · 선택에 따라 NPC 관계 상승</small></span><em>${formatEventProbability(WORLD_REPEAT_ENCOUNTER_CHANCE)}</em></div><div class="tools-list-row"><span><b>불특정 인원 · 역 앞 협박</b><small>잠실역·명동역 방문당 ${formatEventProbability(EXTORTION_ENCOUNTER_CHANCE)} · 보유 현금 10% 또는 건강·체력·관계 피해</small></span><em>${formatEventProbability(EXTORTION_ENCOUNTER_CHANCE)}</em></div></section>`:""}<section class="tools-event-group"><h3>심야 메시지 이벤트 <span>1</span></h3><button type="button" class="tools-list-row" data-tools-late-invitation><span><b>보고 싶어 · 늦은 밤의 초대</b><small>DAY ${LATE_NIGHT_INVITATION_MIN_DAY}+ · 22:00 이후 · 하루 1회 판정 · ${escapeHtml(invitationStatus)}</small></span><em>${formatEventProbability(LATE_NIGHT_INVITATION_CHANCE)}</em></button></section>${Object.entries(groups).map(([label,events])=>`<section class="tools-event-group"><h3>${escapeHtml(label)} <span>${events.length}</span></h3>${events.map(event=>`<button type="button" class="tools-list-row" data-tools-event="${event.id}" aria-label="${escapeHtml(event.title)} · ${getEventProbabilitySummary(event)}"><span><b>${escapeHtml(event.title)}</b><small>${event.conditionLabel?`조건: ${escapeHtml(event.conditionLabel)} · `:""}${getEventProbabilitySummary(event)} · DAY ${event.dayRange?.[0]??"-"}–${event.dayRange?.[1]??"-"} · ${event.repeatable===false?"1회 한정":"반복 가능"}</small></span><em>${formatEventProbability(event.probability)}</em></button>`).join("")}</section>`).join("")}`;
   }else if(gameToolsTab==="maps"){
     content.innerHTML=`<div class="game-tools-intro"><b>지도·장소 이벤트</b><span>19:00–21:59에는 여자친구와 함께 외출하고, 22:00 이후에는 혼자 외출합니다. 22:00 이후 일반 장소 이벤트에는 여자친구 캐릭터가 표시되지 않습니다.</span></div><div class="tools-map-list">${Object.values(WORLD_MAPS).map(map=>`<section class="tools-map-card"><header><span>${map.theme.toUpperCase()}</span><b>${escapeHtml(map.name)}</b><small>${escapeHtml(map.subtitle)}</small></header><div>${map.locations.map(location=>`<article><span>${location.icon}</span><div><b>${escapeHtml(location.name)}</b><small>${escapeHtml(location.category)} · ${escapeHtml(location.description)}${location.id==="small-cafe"?" · 유리 반복 조우 50%":location.id==="night-food"?" · 22시 이후 유진 조우 50%":""}</small></div><button type="button" data-tools-map-go="${map.id}:${location.id}">이동</button>${location.category!=="home"?`<button type="button" data-tools-map-event="${map.id}:${location.id}">이벤트</button>`:""}</article>`).join("")}</div></section>`).join("")}</div>`;
   }else if(gameToolsTab==="endings"){
@@ -1931,8 +1931,9 @@ function openTitleIntroduction(){
 }
 
 function getWorldToolLocationNote(location) {
+  if(["jamsil-station","myeongdong-station"].includes(location.id))return ` · 불특정 인원 협박 ${formatEventProbability(EXTORTION_ENCOUNTER_CHANCE)} · 보유 현금 10% 위험`;
   if(["lake-promenade","mountain-trail"].includes(location.id))return ` · 저녁 민준 고민 상담 ${formatEventProbability(MINJUN_ENCOUNTER_CHANCE)} · 하은 루트 10단계`;
-  if(["prime-gym","boxing-studio","protein-cafe"].includes(location.id))return ` · 저녁 재민 운동 퀴즈 ${formatEventProbability(JAEMIN_ENCOUNTER_CHANCE)} · 장소별 5문항`;
+  if(["prime-gym","boxing-studio","protein-cafe","running-park","climbing-lab"].includes(location.id))return ` · 저녁 재민 운동 퀴즈 ${formatEventProbability(JAEMIN_ENCOUNTER_CHANCE)} · 장소별 5문항`;
   if(location.id==="neon-club")return ` · 저녁 준호 연인 정보 ${formatEventProbability(JUNHO_ENCOUNTER_CHANCE)}`;
   return "";
 }
